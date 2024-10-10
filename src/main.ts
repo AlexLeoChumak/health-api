@@ -1,13 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-<<<<<<< HEAD
 import { ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from 'src/filters/all-exceptions.filter';
-=======
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
->>>>>>> c7cf3c37e01ac14531b57d38f1c2909661d3e5e8
+import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
+import { GlobalResponseInterceptor } from 'src/common/interceptors/global-response/global-response.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,10 +18,8 @@ async function bootstrap() {
       transform: true, // Автоматически преобразует типы данных
     }),
   );
-<<<<<<< HEAD
+  app.useGlobalInterceptors(new GlobalResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
-=======
->>>>>>> c7cf3c37e01ac14531b57d38f1c2909661d3e5e8
   await app.listen(3000);
 }
 bootstrap();

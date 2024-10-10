@@ -1,4 +1,5 @@
 import { Logger, Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthController } from 'src/auth/auth.controller';
@@ -17,6 +18,7 @@ import {
   PatientEntity,
   PersonalInfo,
 } from 'src/auth/entities/patient.entity';
+import { CommonModule } from 'src/common/modules/common.module';
 
 @Module({
   imports: [
@@ -32,6 +34,11 @@ import {
       EducationMedicalWorkerInfo,
       PlaceWorkInfo,
     ]),
+    JwtModule.register({
+      secret: 'interstellar',
+      signOptions: { expiresIn: '1h' },
+    }),
+    CommonModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, Logger],

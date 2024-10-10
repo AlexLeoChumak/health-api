@@ -41,7 +41,7 @@ class PersonalInfoDto {
   @IsString() @IsNotEmpty() gender: string;
   @IsString() @IsNotEmpty() lastName: string;
   @IsString() @IsOptional() middleName: string | null;
-  @IsNotEmpty() photo: File | string;
+  @IsNotEmpty() photo: string | null;
 }
 
 export class PatientBaseDto {

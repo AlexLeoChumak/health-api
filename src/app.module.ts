@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-<<<<<<< HEAD
-import { AuthModule } from 'src/auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthModule } from 'src/auth/auth.module';
 import {
   AddressRegistrationInfo,
   AddressResidenceInfo,
@@ -19,6 +18,7 @@ import {
   EducationMedicalWorkerInfo,
   PlaceWorkInfo,
 } from 'src/auth/entities/doctor.entity';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 @Module({
   imports: [
@@ -30,11 +30,11 @@ import {
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
+        host: configService.get<string>('POSTGRES_HOST'),
+        port: configService.get<number>('POSTGRES_PORT'),
+        username: configService.get<string>('POSTGRES_USER'),
+        password: configService.get<string>('POSTGRES_PASSWORD'),
+        database: configService.get<string>('POSTGRES_DB'),
         entities: [
           PatientEntity,
           DoctorEntity,
@@ -50,13 +50,16 @@ import {
         synchronize: true,
       }),
     }),
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        type: 'single',
+        url: `redis://${configService.get<string>('REDIS_HOST')}:${configService.get<number>('REDIS_PORT')}`,
+      }),
+      inject: [ConfigService],
+    }),
     AuthModule,
   ],
-=======
-
-@Module({
-  imports: [],
->>>>>>> c7cf3c37e01ac14531b57d38f1c2909661d3e5e8
   controllers: [AppController],
   providers: [AppService],
 })

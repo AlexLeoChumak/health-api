@@ -138,8 +138,8 @@ export class PersonalInfo {
   @Column()
   gender: string;
 
-  @Column()
-  photo: string; // Можно заменить на File или другой тип в зависимости от требований
+  @Column({ nullable: true })
+  photo: string | null;
 }
 
 // Сущность Patient, включающая все связи
