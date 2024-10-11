@@ -5,70 +5,65 @@ import {
   CallHandler,
   HttpStatus,
   Logger,
+  StreamableFile,
 } from '@nestjs/common';
-import { Observable, of, from } from 'rxjs';
+import { Observable, from, of, throwError } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
-import { Response } from 'express';
 import * as fileType from 'file-type';
+
 import { ApiResponseInterface } from 'src/common/models/api-response.interface';
+import { UnsupportedMediaTypeException } from 'src/common/exceptions/unsupported-media-type.exception';
+import { ProcessingFileTypeException } from 'src/common/exceptions/processing-file-type.exception';
 
 @Injectable()
-export class GlobalResponseInterceptor<T> implements NestInterceptor<T, any> {
+export class GlobalResponseInterceptor<T> implements NestInterceptor<T> {
   private readonly logger = new Logger(GlobalResponseInterceptor.name);
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const response = context.switchToHttp().getResponse<Response>();
-
     return next.handle().pipe(
       switchMap((data) => {
-        // Проверка, является ли входное значение Buffer или Uint8Array
         if (data instanceof Buffer || data instanceof Uint8Array) {
-          // Преобразуем асинхронную операцию `fileType.fromBuffer` в Observable
           return from(fileType.fromBuffer(data)).pipe(
             map((fileTypeResult) => {
               if (fileTypeResult && fileTypeResult.mime.startsWith('image/')) {
                 this.logger.log('Valid image file detected');
-                response.set({
-                  'Content-Type': fileTypeResult.mime,
-                });
-                response.end(data);
-                return; // Завершаем поток, так как ответ уже отправлен
+
+                // Использую StreamableFile для отправки файла
+                const streamableFile = new StreamableFile(data);
+
+                // Возвращаю файл с установленными заголовками
+                context
+                  .switchToHttp()
+                  .getResponse()
+                  .setHeader('Content-Type', fileTypeResult.mime);
+
+                return streamableFile;
               } else {
                 this.logger.warn(`Invalid file type: ${fileTypeResult?.mime}`);
-                response.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).json({
-                  statusCode: HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                  message: 'Unsupported file type',
-                });
-                return; // Завершаем поток
+                throw new UnsupportedMediaTypeException(
+                  `Неподдерживаемый тип файла: ${fileTypeResult?.mime}`,
+                );
               }
             }),
-            catchError((err) => {
-              this.logger.error(`Error processing file type: ${err.message}`);
-              response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                message: 'An error occurred while processing the file type',
-              });
-              return of(undefined); // Возвращаем пустое значение для корректной работы pipe
+            catchError((error) => {
+              this.logger.error(`Error processing file type: ${error.message}`);
+              throw new ProcessingFileTypeException(
+                `Произошла ошибка при обработке типа файла: ${error.message}`,
+              );
             }),
           );
         } else {
-          // Обработка случаев, когда data не является Buffer или Uint8Array
+          // Обработка данных, если это не файл
           this.logger.log('Processing non-file response');
-          response.status(data?.statusCode || HttpStatus.OK);
           return of({
             statusCode: data?.statusCode || HttpStatus.OK,
             message: data?.message || 'Операция завершена успешно',
             data: data?.data || data,
-          } as ApiResponseInterface<T>); // Возвращаем ApiResponseInterface
+          } as ApiResponseInterface<T>);
         }
       }),
-      catchError((err) => {
-        this.logger.error(`Error processing response: ${err.message}`);
-        response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'An error occurred while processing the response',
-        });
-        return of(undefined); // Возвращаем пустое значение для корректной работы pipe
+      catchError((error: Error) => {
+        return throwError(() => error); // Просто пробрасываю оригинальную ошибку
       }),
     );
   }
