@@ -1,9 +1,9 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
 import { GlobalResponseInterceptor } from 'src/common/interceptors/global-response/global-response.interceptor';
+import { GlobalExceptionFilter } from 'src/common/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,8 +18,14 @@ async function bootstrap() {
       transform: true, // Автоматически преобразует типы данных
     }),
   );
+
+  // ResponseInterceptor
   app.useGlobalInterceptors(new GlobalResponseInterceptor());
-  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // ExceptionFilter
+  const httpAdapterHost = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new GlobalExceptionFilter(httpAdapterHost));
+
   await app.listen(3000);
 }
 bootstrap();

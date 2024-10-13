@@ -8,8 +8,6 @@ import {
   Logger,
   Patch,
   Get,
-  Header,
-  StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Observable } from 'rxjs';

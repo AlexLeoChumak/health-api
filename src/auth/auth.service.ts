@@ -1,7 +1,16 @@
-import { HttpStatus, Injectable, Logger, StreamableFile } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  StreamableFile,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   catchError,
+  combineLatest,
   from,
   map,
   mergeMap,
@@ -15,13 +24,10 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 
-import { DatabaseException } from 'src/common/exceptions/database.exception';
-import { ValidationException } from 'src/common/exceptions/validation.exception';
 import { AUTH_MESSAGES } from 'src/i18n/ru';
 import { DoctorEntity } from 'src/auth/entities/doctor.entity';
 import { PatientEntity, PersonalInfo } from 'src/auth/entities/patient.entity';
 import { LoginDto } from 'src/auth/dto/login.dto';
-import { UnauthorizedException } from 'src/common/exceptions/unauthorized.exception';
 import {
   ContactInfoWithHashedPasswordDto,
   PatientWithHashedPasswordDto,
@@ -70,7 +76,7 @@ export class AuthService {
     repository: Repository<PatientEntity | DoctorEntity>,
   ): Observable<ApiResponseInterface<RegistrationUserIdResponseInterface>> {
     if (!user) {
-      throw new ValidationException(AUTH_MESSAGES.REGISTRATION_USER_DATA_ERROR);
+      throw new NotFoundException();
     }
 
     return from(this.hashPassword(user)).pipe(
@@ -84,10 +90,7 @@ export class AuthService {
         data: { userId: res.id },
       })),
       catchError(() => {
-        return throwError(
-          () =>
-            new DatabaseException(AUTH_MESSAGES.REGISTRATION_DATABASE_ERROR),
-        );
+        return throwError(() => new InternalServerErrorException());
       }),
     );
   }
@@ -114,10 +117,10 @@ export class AuthService {
           contactInfo: updateContactInfo,
         };
       } catch {
-        throw new DatabaseException(AUTH_MESSAGES.REGISTRATION_DATABASE_ERROR);
+        throw new InternalServerErrorException();
       }
     } else {
-      throw new DatabaseException(AUTH_MESSAGES.REGISTRATION_DATABASE_ERROR);
+      throw new InternalServerErrorException();
     }
   }
 
@@ -133,60 +136,70 @@ export class AuthService {
     const fileBuffer = photo.buffer;
     const mimeType = photo.mimetype;
 
-    return this.cloudStorageService
-      .uploadFile(bucketId, fileName, fileBuffer, mimeType)
-      .pipe(
-        switchMap((responseCloudStorage) => {
-          this.logger.log(responseCloudStorage, 'responseCloudStorage');
+    const user$ = this.findUserByIdWithPersonalInfo(repository, userId);
+    const upload$ = this.uploadPhotoToCloud(
+      bucketId,
+      fileName,
+      fileBuffer,
+      mimeType,
+    );
 
-          // Получаем пользователя с personalInfo
-          return from(
-            repository.findOne({
-              where: { id: userId },
-              relations: ['personalInfo'], // Получаем личную информацию
-            }),
-          ).pipe(
-            mergeMap((userIdWithPersonalInfoEntity) => {
-              this.logger.log(
-                'илона маск foundUser',
-                JSON.stringify(userIdWithPersonalInfoEntity),
-              );
-              // Проверяем, найден ли пользователь
-              if (
-                !userIdWithPersonalInfoEntity ||
-                !userIdWithPersonalInfoEntity.personalInfo
-              ) {
-                throw new DatabaseException(
-                  AUTH_MESSAGES.REGISTRATION_DATABASE_ERROR,
-                );
-              }
+    return combineLatest([user$, upload$]).pipe(
+      switchMap(([userEntity, cloudStorageResponse]) => {
+        return this.updateUserPhoto(
+          userEntity.personalInfo.id,
+          cloudStorageResponse.fileId,
+        );
+      }),
+    );
+  }
 
-              const IdPersonalInfoEntity =
-                userIdWithPersonalInfoEntity.personalInfo.id;
+  private uploadPhotoToCloud(
+    bucketId: string,
+    fileName: string,
+    fileBuffer: Buffer,
+    mimeType: string,
+  ): Observable<any> {
+    return this.cloudStorageService.uploadFile(
+      bucketId,
+      fileName,
+      fileBuffer,
+      mimeType,
+    );
+  }
 
-              // Обновляем данные в репозитории
-              return from(
-                this.personalInfoRepository.update(IdPersonalInfoEntity, {
-                  photo: responseCloudStorage.fileId,
-                }),
-              ).pipe(
-                map((res) => ({
-                  statusCode: HttpStatus.OK,
-                  message: AUTH_MESSAGES.REGISTRATION_SUCCESS,
-                  data: res,
-                })),
-              );
-            }),
-          );
-        }),
-        catchError((error) => {
-          this.logger.error('Error uploading user photo:', error);
-          return throwError(
-            () =>
-              new DatabaseException(AUTH_MESSAGES.REGISTRATION_DATABASE_ERROR),
-          );
-        }),
-      );
+  private findUserByIdWithPersonalInfo(
+    repository: Repository<PatientEntity | DoctorEntity>,
+    userId: string,
+  ): Observable<any> {
+    return from(
+      repository.findOne({
+        where: { id: userId },
+        relations: ['personalInfo'],
+      }),
+    ).pipe(
+      map((userEntity) => {
+        if (!userEntity || !userEntity.personalInfo) {
+          throw new NotFoundException();
+        }
+        return userEntity;
+      }),
+    );
+  }
+
+  private updateUserPhoto(
+    personalInfoId: string,
+    fileId: string,
+  ): Observable<ApiResponseInterface<any>> {
+    return from(
+      this.personalInfoRepository.update(personalInfoId, { photo: fileId }),
+    ).pipe(
+      map((response) => ({
+        statusCode: HttpStatus.OK,
+        message: AUTH_MESSAGES.REGISTRATION_SUCCESS,
+        data: response,
+      })),
+    );
   }
 
   downloadUserPhoto(fileId: string): Observable<Buffer> {
@@ -219,9 +232,7 @@ export class AuthService {
     ).pipe(
       switchMap((user: PatientEntity | DoctorEntity) => {
         if (!user) {
-          throw new UnauthorizedException(
-            AUTH_MESSAGES.LOGIN_INVALID_PHONE_NUMBER_OR_PASSWORD,
-          );
+          throw new UnauthorizedException();
         }
 
         // Сравнение пароля с хешем через from(), выполняется промис bcrypt.compare
@@ -230,9 +241,7 @@ export class AuthService {
         ).pipe(
           map((isMatch) => {
             if (!isMatch) {
-              throw new UnauthorizedException(
-                AUTH_MESSAGES.LOGIN_INVALID_PHONE_NUMBER_OR_PASSWORD,
-              );
+              throw new UnauthorizedException();
             }
 
             // Генерация токена, если пароли совпадают
@@ -246,14 +255,7 @@ export class AuthService {
           }),
         );
       }),
-      catchError(() =>
-        throwError(
-          () =>
-            new UnauthorizedException(
-              AUTH_MESSAGES.LOGIN_INVALID_PHONE_NUMBER_OR_PASSWORD,
-            ),
-        ),
-      ),
+      catchError(() => throwError(() => new InternalServerErrorException())),
     );
   }
 }
