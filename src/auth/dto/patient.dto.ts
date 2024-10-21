@@ -66,7 +66,7 @@ export class ContactInfoWithHashedPasswordDto extends ContactInfoDto {
 
 // REQUEST
 // DTO запроса пациента с паролем без вложения в объект user
-export class PatienWithPasswordtDto extends PatientBaseDto {
+export class PatientWithPasswordtDto extends PatientBaseDto {
   @IsNotEmpty()
   contactInfo: ContactInfoWithPasswordDto;
 }
@@ -74,7 +74,7 @@ export class PatienWithPasswordtDto extends PatientBaseDto {
 // DTO запроса пациента с паролем с вложением в объект user
 export class PatientRequestDto {
   @IsNotEmpty()
-  user: PatienWithPasswordtDto;
+  user: PatientWithPasswordtDto;
 }
 
 // RESPONSE

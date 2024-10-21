@@ -1,68 +1,44 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseInterceptors,
-  Param,
-  UploadedFile,
-  Logger,
-  Patch,
-  Get,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Post, Body, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 
 import { AuthService } from './auth.service';
 import { LoginDto } from 'src/auth/dto/login.dto';
 import {
   PatientRequestDto,
-  PatienWithPasswordtDto,
+  PatientWithPasswordtDto,
 } from 'src/auth/dto/patient.dto';
 import {
   DoctorRequestDto,
   DoctorWithPasswordDto,
 } from 'src/auth/dto/doctor.dto';
-import { ApiResponseInterface } from 'src/common/models/api-response.interface';
 import { RegistrationUserIdResponseInterface } from 'src/auth/models/registration-user-id-response.interface';
 import { LoginAccessTokenUserDataResponseInterface } from 'src/auth/models/login-access-token-userdata-response.interface';
+import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly logger: Logger,
-  ) {}
+  private readonly logger = new Logger();
+
+  constructor(private readonly authService: AuthService) {}
 
   @Post('registration/patient')
   registrationPatient(
     @Body() patientData: PatientRequestDto,
-  ): Observable<ApiResponseInterface<RegistrationUserIdResponseInterface>> {
-    const extractData: PatienWithPasswordtDto = patientData?.user;
+  ): Observable<
+    GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
+  > {
+    const extractData: PatientWithPasswordtDto = patientData?.user;
     return this.authService.registrationPatient(extractData);
   }
 
   @Post('registration/doctor')
   registrationDoctor(
     @Body() doctorData: DoctorRequestDto,
-  ): Observable<ApiResponseInterface<RegistrationUserIdResponseInterface>> {
+  ): Observable<
+    GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
+  > {
     const extractData: DoctorWithPasswordDto = doctorData?.user;
     return this.authService.registrationDoctor(extractData);
-  }
-
-  @Patch('registration/:user/:id/upload-photo')
-  @UseInterceptors(FileInterceptor('photo'))
-  uploadUserPhoto(
-    @Param('user') user: 'patient' | 'doctor',
-    @Param('id') userId: string,
-    @UploadedFile() photo: Express.Multer.File,
-  ): Observable<ApiResponseInterface<any>> {
-    //any
-    return this.authService.uploadUserPhoto(user, userId, photo);
-  }
-
-  @Get('download-profile-photo/:fileId')
-  downloadPhoto(@Param('fileId') fileId: string): Observable<Buffer> {
-    return this.authService.downloadUserPhoto(fileId);
   }
 
   @Post('login/patient')

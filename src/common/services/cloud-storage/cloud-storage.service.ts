@@ -1,21 +1,14 @@
-import { Injectable, Logger, StreamableFile } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { catchError, from, map, Observable, switchMap, throwError } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import B2 from 'backblaze-b2';
 
-import { DatabaseException } from 'src/common/exceptions/database.exception';
-import { inspect } from 'util';
-import { Stream } from 'stream';
-
-interface B2UploadFileResponseInterface {
-  fileId: string;
-  fileName: string;
-  bucketId: string;
-  contentLength: number;
-  contentType: string;
-  uploadTimestamp: number;
-}
+import { B2UploadFileResponseInterface } from 'src/common/models/b2-upload-file-response.interface';
 
 @Injectable()
 export class CloudStorageService {
@@ -51,12 +44,8 @@ export class CloudStorageService {
         return response.data;
       }),
       catchError((error) => {
-        return throwError(
-          () =>
-            new DatabaseException(
-              `Ошибка при загрузке файла: ${error.message}`,
-            ),
-        );
+        this.logger.log(error);
+        return throwError(() => error);
       }),
     );
   }
@@ -75,7 +64,7 @@ export class CloudStorageService {
         const uploadUrl: string = uploadUrlResponse.data.uploadUrl;
         const uploadAuthToken: string =
           uploadUrlResponse.data.authorizationToken;
-        return this.performFileUpload(
+        return this.performUploadFile(
           fileName,
           fileBuffer,
           mimeType,
@@ -83,10 +72,14 @@ export class CloudStorageService {
           uploadUrl,
         );
       }),
+      catchError((error) => {
+        this.logger.log(error);
+        return throwError(() => error);
+      }),
     );
   }
 
-  private performFileUpload(
+  private performUploadFile(
     fileName: string,
     fileBuffer: Buffer,
     mimeType: string,
@@ -104,6 +97,7 @@ export class CloudStorageService {
     return from(this.b2.uploadFile(uploadParams)).pipe(
       map((uploadResponse) => uploadResponse.data),
       catchError((error) => {
+        this.logger.log(error);
         return throwError(() => error);
       }),
     );

@@ -18,27 +18,17 @@ import {
   PatientEntity,
   PersonalInfo,
 } from 'src/auth/entities/patient.entity';
-import { CommonModule } from 'src/common/modules/common.module';
+import { CommonModule } from 'src/common/common.module';
+import { EntitiesModule } from 'src/entities/entities.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      PatientEntity,
-      DoctorEntity,
-      AddressRegistrationInfo,
-      AddressResidenceInfo,
-      ContactInfo,
-      IdentificationInfo,
-      PersonalInfo,
-      AddressMedicalInstitutionInfo,
-      EducationMedicalWorkerInfo,
-      PlaceWorkInfo,
-    ]),
+    EntitiesModule,
+    CommonModule,
     JwtModule.register({
       secret: 'interstellar',
       signOptions: { expiresIn: '1h' },
     }),
-    CommonModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, Logger],

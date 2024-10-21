@@ -17,6 +17,8 @@ import {
   PlaceWorkInfo,
 } from 'src/auth/entities/doctor.entity';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { UserProfileModule } from './user-profile/user-profile.module';
+import { EntitiesModule } from './entities/entities.module';
 
 @Module({
   imports: [
@@ -57,6 +59,8 @@ import { RedisModule } from '@nestjs-modules/ioredis';
       inject: [ConfigService],
     }),
     AuthModule,
+    UserProfileModule,
+    EntitiesModule,
   ],
   controllers: [],
   providers: [],
