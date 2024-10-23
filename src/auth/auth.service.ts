@@ -12,7 +12,6 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 
-import { AUTH_MESSAGES } from 'src/i18n/ru';
 import { DoctorEntity } from 'src/auth/entities/doctor.entity';
 import { PatientEntity } from 'src/auth/entities/patient.entity';
 import { LoginDto } from 'src/auth/dto/login.dto';
@@ -28,6 +27,7 @@ import {
 import { RegistrationUserIdResponseInterface } from 'src/auth/models/registration-user-id-response.interface';
 import { LoginAccessTokenUserDataResponseInterface } from 'src/auth/models/login-access-token-userdata-response.interface';
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
+import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
 
 @Injectable()
 export class AuthService {
@@ -64,7 +64,9 @@ export class AuthService {
     GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
   > {
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundException(
+        AUTH_NOTIFICATIONS.REGISTRATION_USER_NOT_FOUND_ERROR,
+      );
     }
 
     return this.hashPassword(user).pipe(
@@ -74,7 +76,7 @@ export class AuthService {
       switchMap((entity) => from(repository.save(entity))),
       map((response) => ({
         statusCode: HttpStatus.CREATED,
-        message: AUTH_MESSAGES.REGISTRATION_SUCCESS,
+        message: AUTH_NOTIFICATIONS.REGISTRATION_SUCCESS,
         data: { userId: response.id },
       })),
       catchError((error) => {
@@ -110,7 +112,9 @@ export class AuthService {
         catchError((error) => throwError(() => error)),
       );
     } else {
-      throw new BadRequestException('Отсутствует пароль');
+      throw new BadRequestException(
+        AUTH_NOTIFICATIONS.REGISTRATION_PASSWORD_NOT_FOUND_ERROR,
+      );
     }
   }
 
@@ -167,8 +171,10 @@ export class AuthService {
       }),
     ).pipe(
       map((user) => {
-        if (!user || !user.personalInfo) {
-          throw new NotFoundException('Пользователь не найден');
+        if (!user || !user.contactInfo) {
+          throw new NotFoundException(
+            AUTH_NOTIFICATIONS.LOGIN_USER_NOT_FOUND_ERROR,
+          );
         }
         return user;
       }),
@@ -185,7 +191,9 @@ export class AuthService {
     ).pipe(
       map((isMatch) => {
         if (!isMatch) {
-          throw new UnauthorizedException('Неверный логин или пароль');
+          throw new UnauthorizedException(
+            AUTH_NOTIFICATIONS.LOGIN_INVALID_PHONE_NUMBER_OR_PASSWORD,
+          );
         }
         return isMatch;
       }),
