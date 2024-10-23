@@ -17,7 +17,7 @@ import { GlobalSuccessResponseInterface } from 'src/common/models/global-success
 
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new Logger();
+  private readonly logger = new Logger(AuthController.name);
 
   constructor(private readonly authService: AuthService) {}
 
