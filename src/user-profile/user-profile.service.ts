@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -22,8 +16,8 @@ import { DoctorEntity } from 'src/auth/entities/doctor.entity';
 import { PatientEntity, PersonalInfo } from 'src/auth/entities/patient.entity';
 import { B2UploadFileResponseInterface } from 'src/common/models/b2-upload-file-response.interface';
 import { CloudStorageService } from 'src/common/services/cloud-storage/cloud-storage.service';
-import { AUTH_MESSAGES } from 'src/i18n/ru';
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
+import { USER_PROFILE_NOTIFICATIONS } from 'src/user-profile/constans/user-profile-notification.constant';
 
 @Injectable()
 export class UserProfileService {
@@ -58,9 +52,9 @@ export class UserProfileService {
       this.uploadPhotoToCloud(bucketId, fileName, fileBuffer, mimeType);
 
     return combineLatest([user$, upload$]).pipe(
-      switchMap(([userEntity, cloudStorageResponse]) => {
+      switchMap(([user, cloudStorageResponse]) => {
         return this.updateUserPhoto(
-          userEntity.personalInfo.id,
+          user.personalInfo.id,
           cloudStorageResponse.fileId,
         );
       }),
@@ -78,11 +72,13 @@ export class UserProfileService {
         relations: ['personalInfo'],
       }),
     ).pipe(
-      map((userEntity) => {
-        if (!userEntity || !userEntity.personalInfo) {
-          throw new NotFoundException();
+      map((user) => {
+        if (!user || !user.personalInfo) {
+          throw new NotFoundException(
+            USER_PROFILE_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+          );
         }
-        return userEntity;
+        return user;
       }),
       catchError((error) => throwError(() => error)),
     );
@@ -108,7 +104,7 @@ export class UserProfileService {
     ).pipe(
       map((response) => ({
         statusCode: HttpStatus.OK,
-        message: AUTH_MESSAGES.REGISTRATION_SUCCESS,
+        message: USER_PROFILE_NOTIFICATIONS.UPDATE_PHOTO_SUCCESS,
         data: response,
       })),
       catchError((error) => throwError(() => error)),
