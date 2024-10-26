@@ -2,6 +2,7 @@ import {
   BadRequestException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
   UnauthorizedException,
@@ -28,6 +29,12 @@ import { RegistrationUserIdResponseInterface } from 'src/auth/models/registratio
 import { LoginAccessTokenUserDataResponseInterface } from 'src/auth/models/login-access-token-userdata-response.interface';
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
+import {
+  DOCTOR_ENTITY_RELATIONS,
+  DoctorEntityRelationType,
+  PATIENT_ENTITY_RELATIONS,
+  PatientEntityRelationType,
+} from 'src/entities/constants/entities-relations.constants';
 
 @Injectable()
 export class AuthService {
@@ -147,7 +154,10 @@ export class AuthService {
             };
             const accessToken = this.jwtService.sign(payload);
 
-            return { accessToken, user };
+            const filteredUserFields =
+              this.filterUserFieldsForTransferToClientApp(user);
+
+            return { accessToken, filteredUserFields };
           }),
           catchError((error) => {
             this.logger.log(error);
@@ -162,12 +172,17 @@ export class AuthService {
     loginDto: LoginDto,
     repository: Repository<PatientEntity | DoctorEntity>,
   ) {
+    const relations: PatientEntityRelationType[] | DoctorEntityRelationType[] =
+      repository.target === PatientEntity
+        ? PATIENT_ENTITY_RELATIONS
+        : DOCTOR_ENTITY_RELATIONS;
+
     return from(
       repository.findOne({
         where: {
           contactInfo: { mobilePhoneNumber: loginDto?.mobilePhoneNumber },
         },
-        relations: ['contactInfo'],
+        relations,
       }),
     ).pipe(
       map((user) => {
@@ -176,10 +191,44 @@ export class AuthService {
             AUTH_NOTIFICATIONS.LOGIN_USER_NOT_FOUND_ERROR,
           );
         }
+
         return user;
       }),
       catchError((error) => throwError(() => error)),
     );
+  }
+
+  private filterUserFieldsForTransferToClientApp(
+    user: any,
+    isRoot: boolean = true,
+  ): any {
+    if (typeof user !== 'object' || user === null) {
+      throw new InternalServerErrorException('Invalid input type');
+    }
+
+    const filteredObj: any = {};
+    const skipKeys = isRoot ? ['hashedPassword'] : ['id', 'hashedPassword'];
+
+    for (const [key, value] of Object.entries(user)) {
+      if (skipKeys.includes(key) || value === undefined || value === null) {
+        continue;
+      }
+
+      if (typeof value === 'object') {
+        const nested = this.filterUserFieldsForTransferToClientApp(
+          value,
+          false,
+        );
+
+        if (nested && Object.keys(nested).length > 0) {
+          filteredObj[key] = nested;
+        }
+      } else {
+        filteredObj[key] = value;
+      }
+    }
+
+    return filteredObj;
   }
 
   private comparePassword(
