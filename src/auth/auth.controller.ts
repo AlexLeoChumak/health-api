@@ -2,18 +2,20 @@ import { Controller, Post, Body, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 
 import { AuthService } from './auth.service';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { RegistrationUserIdResponseInterface } from 'src/auth/models/registration-user-id-response.interface';
+import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 import {
-  PatientRequestDto,
-  PatientWithPasswordtDto,
-} from 'src/auth/dto/patient.dto';
+  DoctorResponseDto,
+  PatientResponseDto,
+} from 'src/auth/dto/user-response.dto';
+
+import { LoginRequestDto } from 'src/auth/dto/login-request.dto';
 import {
   DoctorRequestDto,
-  DoctorWithPasswordDto,
-} from 'src/auth/dto/doctor.dto';
-import { RegistrationUserIdResponseInterface } from 'src/auth/models/registration-user-id-response.interface';
-import { LoginAccessTokenUserDataResponseInterface } from 'src/auth/models/login-access-token-userdata-response.interface';
-import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
+  DoctorRequestIncludesPasswordDto,
+  PatientRequestDto,
+  PatientRequestIncludesPasswordDto,
+} from 'src/auth/dto/user-request.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -27,7 +29,7 @@ export class AuthController {
   ): Observable<
     GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
   > {
-    const extractData: PatientWithPasswordtDto = patientData?.user;
+    const extractData: PatientRequestIncludesPasswordDto = patientData?.user;
     return this.authService.registrationPatient(extractData);
   }
 
@@ -37,21 +39,21 @@ export class AuthController {
   ): Observable<
     GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
   > {
-    const extractData: DoctorWithPasswordDto = doctorData?.user;
+    const extractData: DoctorRequestIncludesPasswordDto = doctorData?.user;
     return this.authService.registrationDoctor(extractData);
   }
 
   @Post('login/patient')
   loginPatient(
-    @Body() patientData: LoginDto,
-  ): Observable<LoginAccessTokenUserDataResponseInterface> {
+    @Body() patientData: LoginRequestDto,
+  ): Observable<PatientResponseDto> {
     return this.authService.loginPatient(patientData);
   }
 
   @Post('login/doctor')
   loginDoctor(
-    @Body() doctorData: LoginDto,
-  ): Observable<LoginAccessTokenUserDataResponseInterface> {
+    @Body() doctorData: LoginRequestDto,
+  ): Observable<DoctorResponseDto> {
     return this.authService.loginDoctor(doctorData);
   }
 }
