@@ -15,18 +15,8 @@ import * as bcrypt from 'bcryptjs';
 
 import { DoctorEntity } from 'src/auth/entities/doctor.entity';
 import { PatientEntity } from 'src/auth/entities/patient.entity';
-import { LoginDto } from 'src/auth/dto/login.dto';
-import {
-  ContactInfoWithHashedPasswordDto,
-  PatientWithHashedPasswordDto,
-  PatientWithPasswordtDto,
-} from 'src/auth/dto/patient.dto';
-import {
-  DoctorWithHashedPasswordDto,
-  DoctorWithPasswordDto,
-} from 'src/auth/dto/doctor.dto';
+
 import { RegistrationUserIdResponseInterface } from 'src/auth/models/registration-user-id-response.interface';
-import { LoginAccessTokenUserDataResponseInterface } from 'src/auth/models/login-access-token-userdata-response.interface';
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
 import {
@@ -35,6 +25,19 @@ import {
   PATIENT_ENTITY_RELATIONS,
   PatientEntityRelationType,
 } from 'src/entities/constants/entities-relations.constants';
+import {
+  DoctorBaseResponseDto,
+  DoctorResponseDto,
+  PatientResponseDto,
+  UserBaseResponseDto,
+} from 'src/auth/dto/user-response.dto';
+import { LoginRequestDto } from 'src/auth/dto/login-request.dto';
+import {
+  DoctorRequestIncludesHashedPasswordDto,
+  DoctorRequestIncludesPasswordDto,
+  PatientRequestIncludesHashedPasswordDto,
+  PatientRequestIncludesPasswordDto,
+} from 'src/auth/dto/user-request.dto';
 
 @Injectable()
 export class AuthService {
@@ -49,7 +52,7 @@ export class AuthService {
   ) {}
 
   registrationPatient(
-    patientData: PatientWithPasswordtDto,
+    patientData: PatientRequestIncludesPasswordDto,
   ): Observable<
     GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
   > {
@@ -57,7 +60,7 @@ export class AuthService {
   }
 
   registrationDoctor(
-    doctorData: DoctorWithPasswordDto,
+    doctorData: DoctorRequestIncludesPasswordDto,
   ): Observable<
     GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
   > {
@@ -65,7 +68,7 @@ export class AuthService {
   }
 
   private registration(
-    user: PatientWithPasswordtDto | DoctorWithPasswordDto,
+    user: PatientRequestIncludesPasswordDto | DoctorRequestIncludesPasswordDto,
     repository: Repository<PatientEntity | DoctorEntity>,
   ): Observable<
     GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
@@ -94,27 +97,34 @@ export class AuthService {
   }
 
   private hashPassword(
-    user: PatientWithPasswordtDto | DoctorWithPasswordDto,
-  ): Observable<PatientWithHashedPasswordDto | DoctorWithHashedPasswordDto> {
+    user: PatientRequestIncludesPasswordDto | DoctorRequestIncludesPasswordDto,
+  ): Observable<
+    | PatientRequestIncludesHashedPasswordDto
+    | DoctorRequestIncludesHashedPasswordDto
+  > {
     if (user?.contactInfo?.password) {
       const saltRounds = 10;
 
       return from(bcrypt.hash(user.contactInfo.password, saltRounds)).pipe(
         map((hashedPassword) => {
           // Создание нового объекта с зашифрованным паролем
-          const updateContactInfo: ContactInfoWithHashedPasswordDto = {
+          const updateContactInfo = {
             ...user.contactInfo,
             hashedPassword,
           };
 
           // Удаление оригинального пароля для обеспечения безопасности
-          delete user.contactInfo.password;
+          delete updateContactInfo.password;
 
-          // Возвращение обновленного объекта с удаленным паролем
-          return {
+          const updatedUser:
+            | PatientRequestIncludesHashedPasswordDto
+            | DoctorRequestIncludesHashedPasswordDto = {
             ...user,
             contactInfo: updateContactInfo,
           };
+
+          // Возвращение нового объекта с удаленным паролем и добавленным хешированным паролем
+          return updatedUser;
         }),
         catchError((error) => throwError(() => error)),
       );
@@ -125,23 +135,25 @@ export class AuthService {
     }
   }
 
-  loginPatient(
-    patientData: LoginDto,
-  ): Observable<LoginAccessTokenUserDataResponseInterface> {
+  loginPatient(patientData: LoginRequestDto): Observable<PatientResponseDto> {
     return this.login(patientData, this.patientRepository);
   }
 
-  loginDoctor(
-    doctorData: LoginDto,
-  ): Observable<LoginAccessTokenUserDataResponseInterface> {
-    return this.login(doctorData, this.doctorRepository);
+  loginDoctor(doctorData: LoginRequestDto): Observable<DoctorResponseDto> {
+    return this.login(
+      doctorData,
+      this.doctorRepository,
+    ) as Observable<DoctorResponseDto>;
   }
 
   private login(
-    loginDto: LoginDto,
+    loginDto: LoginRequestDto,
     repository: Repository<PatientEntity | DoctorEntity>,
-  ): Observable<LoginAccessTokenUserDataResponseInterface> {
-    return this.findUserByMobilePhoneNumberWithContactInfo(
+  ): Observable<PatientResponseDto | DoctorResponseDto> {
+    const isPatientRepository =
+      repository instanceof Repository && repository.target === PatientEntity;
+
+    return this.findUserByMobilePhoneNumberIncludesRelations(
       loginDto,
       repository,
     ).pipe(
@@ -154,10 +166,12 @@ export class AuthService {
             };
             const accessToken = this.jwtService.sign(payload);
 
-            const filteredUserFields =
+            const userDataResponse =
               this.filterUserFieldsForTransferToClientApp(user);
 
-            return { accessToken, filteredUserFields };
+            return isPatientRepository
+              ? ({ accessToken, userDataResponse } as PatientResponseDto)
+              : ({ accessToken, userDataResponse } as DoctorResponseDto);
           }),
           catchError((error) => {
             this.logger.log(error);
@@ -168,8 +182,8 @@ export class AuthService {
     );
   }
 
-  private findUserByMobilePhoneNumberWithContactInfo(
-    loginDto: LoginDto,
+  private findUserByMobilePhoneNumberIncludesRelations(
+    loginDto: LoginRequestDto,
     repository: Repository<PatientEntity | DoctorEntity>,
   ) {
     const relations: PatientEntityRelationType[] | DoctorEntityRelationType[] =
@@ -199,40 +213,42 @@ export class AuthService {
   }
 
   private filterUserFieldsForTransferToClientApp(
-    user: any,
+    user: PatientEntity | DoctorEntity,
     isRoot: boolean = true,
-  ): any {
-    if (typeof user !== 'object' || user === null) {
-      throw new InternalServerErrorException('Invalid input type');
+  ): UserBaseResponseDto | DoctorBaseResponseDto {
+    if (typeof user !== 'object') {
+      throw new InternalServerErrorException(
+        AUTH_NOTIFICATIONS.LOGIN_USER_NOT_FOUND_ERROR,
+      );
     }
 
-    const filteredObj: any = {};
-    const skipKeys = isRoot ? ['hashedPassword'] : ['id', 'hashedPassword'];
+    const filteredObj = {};
+    const skipFields = isRoot ? ['hashedPassword'] : ['id', 'hashedPassword'];
 
-    for (const [key, value] of Object.entries(user)) {
-      if (skipKeys.includes(key) || value === undefined || value === null) {
+    for (const [field, value] of Object.entries(user)) {
+      if (skipFields.includes(field) || value === undefined) {
         continue;
       }
 
-      if (typeof value === 'object') {
+      if (typeof value === 'object' && value !== null) {
         const nested = this.filterUserFieldsForTransferToClientApp(
           value,
           false,
         );
 
         if (nested && Object.keys(nested).length > 0) {
-          filteredObj[key] = nested;
+          filteredObj[field] = nested;
         }
       } else {
-        filteredObj[key] = value;
+        filteredObj[field] = value;
       }
     }
 
-    return filteredObj;
+    return filteredObj as UserBaseResponseDto | DoctorBaseResponseDto;
   }
 
   private comparePassword(
-    loginDto: LoginDto,
+    loginDto: LoginRequestDto,
     user: PatientEntity | DoctorEntity,
   ) {
     return from(
@@ -241,7 +257,7 @@ export class AuthService {
       map((isMatch) => {
         if (!isMatch) {
           throw new UnauthorizedException(
-            AUTH_NOTIFICATIONS.LOGIN_INVALID_PHONE_NUMBER_OR_PASSWORD,
+            AUTH_NOTIFICATIONS.LOGIN_INVALID_PHONE_NUMBER_OR_PASSWORD_ERROR,
           );
         }
         return isMatch;
