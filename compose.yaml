@@ -25,6 +25,27 @@ services:
     networks:
       - app-network
 
+  ionic:
+    build:
+      context: ../health # путь к приложению Ionic
+      dockerfile: Dockerfile.dev # файл Dockerfile для Ionic
+    container_name: ionic-app
+    restart: always
+    ports:
+      - '8100:8100' # Пробрасываем порт для доступа к приложению Ionic
+    depends_on:
+      - app # NestJS приложение запущено до запуска Ionic
+    networks:
+      - app-network
+    command: ionic serve --host 0.0.0.0 --port 8100
+    develop:
+      watch:
+        - action: sync
+          path: ../health/src
+          target: /app/src
+          ignore:
+            - node_modules/
+
   redis:
     image: 'redis:alpine'
     container_name: redis-server
