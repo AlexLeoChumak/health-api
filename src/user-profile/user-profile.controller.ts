@@ -23,7 +23,7 @@ export class UserProfileController {
     @Param('user') user: 'patient' | 'doctor',
     @Param('id') userId: string,
     @UploadedFile() photo: Express.Multer.File,
-  ): Observable<GlobalSuccessResponseInterface<UpdateResult>> {
+  ): Observable<UpdateResult> {
     return this.userProfileService.uploadUserPhoto(user, userId, photo);
   }
 

@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -9,6 +14,7 @@ import {
   map,
   catchError,
   throwError,
+  tap,
 } from 'rxjs';
 import { UpdateResult, Repository } from 'typeorm';
 
@@ -18,9 +24,12 @@ import { B2UploadFileResponseInterface } from 'src/common/models/b2-upload-file-
 import { CloudStorageService } from 'src/common/services/cloud-storage/cloud-storage.service';
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 import { USER_PROFILE_NOTIFICATIONS } from 'src/user-profile/constans/user-profile-notification.constant';
+import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
 
 @Injectable()
 export class UserProfileService {
+  logger = new Logger(UserProfileService.name);
+
   constructor(
     @InjectRepository(PatientEntity)
     private patientRepository: Repository<PatientEntity>,
@@ -36,7 +45,7 @@ export class UserProfileService {
     user: 'patient' | 'doctor',
     userId: string,
     photo: Express.Multer.File,
-  ): Observable<GlobalSuccessResponseInterface<UpdateResult>> {
+  ): Observable<UpdateResult> {
     const repository: Repository<PatientEntity | DoctorEntity> =
       user === 'patient' ? this.patientRepository : this.doctorRepository;
 
@@ -98,17 +107,10 @@ export class UserProfileService {
   private updateUserPhoto(
     personalInfoId: string,
     fileId: string,
-  ): Observable<GlobalSuccessResponseInterface<UpdateResult>> {
+  ): Observable<UpdateResult> {
     return from(
       this.personalInfoRepository.update(personalInfoId, { photo: fileId }),
-    ).pipe(
-      map((response) => ({
-        statusCode: HttpStatus.OK,
-        message: USER_PROFILE_NOTIFICATIONS.UPDATE_PHOTO_SUCCESS,
-        data: response,
-      })),
-      catchError((error) => throwError(() => error)),
-    );
+    ).pipe(catchError((error) => throwError(() => error)));
   }
 
   downloadUserPhoto(fileId: string): Observable<Buffer> {
