@@ -20,10 +20,10 @@ export class AddressMedicalInstitutionInfo {
   district: string;
 
   @Column()
-  house: string;
+  house: number;
 
   @Column({ nullable: true })
-  housing: string | null;
+  housing: number | null;
 
   @Column()
   region: string;

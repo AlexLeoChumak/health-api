@@ -13,7 +13,7 @@ export class AddressRegistrationInfo {
   id: string;
 
   @Column({ nullable: true })
-  apartment: string | null;
+  apartment: number | null;
 
   @Column()
   city: string;
@@ -22,10 +22,10 @@ export class AddressRegistrationInfo {
   district: string;
 
   @Column()
-  house: string;
+  house: number;
 
   @Column({ nullable: true })
-  housing: string | null;
+  housing: number | null;
 
   @Column()
   region: string;
@@ -40,7 +40,7 @@ export class AddressResidenceInfo {
   id: string;
 
   @Column({ nullable: true })
-  apartment: string | null;
+  apartment: number | null;
 
   @Column()
   city: string;
@@ -49,10 +49,10 @@ export class AddressResidenceInfo {
   district: string;
 
   @Column()
-  house: string;
+  house: number;
 
   @Column({ nullable: true })
-  housing: string | null;
+  housing: number | null;
 
   @Column()
   region: string;
