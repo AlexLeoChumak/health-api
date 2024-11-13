@@ -6,5 +6,5 @@ export class PersonalInfoDto {
   @IsString() @IsNotEmpty() gender: string;
   @IsString() @IsNotEmpty() lastName: string;
   @IsString() @IsOptional() middleName: string | null;
-  @IsNotEmpty() photo: string | null;
+  @IsOptional() photo: string | null;
 }
