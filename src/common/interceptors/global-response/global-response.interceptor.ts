@@ -7,7 +7,6 @@ import {
   Logger,
   StreamableFile,
   UnsupportedMediaTypeException,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { Observable, from, of, throwError } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
@@ -45,11 +44,22 @@ export class GlobalResponseInterceptor<T> implements NestInterceptor<T> {
             catchError((error: Error) => throwError(() => error)),
           );
         } else {
-          // Обработка данных, если это не файл
+          // Обработка данных, если обёртка дублируется
+          if (
+            data &&
+            typeof data === 'object' &&
+            'statusCode' in data &&
+            'message' in data &&
+            'data' in data
+          ) {
+            return of(data);
+          }
+
+          // Обработка данных, если они требуют обёртки
           return of({
-            statusCode: data?.statusCode || HttpStatus.OK,
-            message: data?.message || 'Операция завершена успешно',
-            data: data?.data || data,
+            statusCode: HttpStatus.OK,
+            message: 'Операция завершена успешно',
+            data: data,
           } as GlobalSuccessResponseInterface<T>);
         }
       }),
