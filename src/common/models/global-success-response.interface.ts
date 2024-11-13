@@ -1,5 +1,5 @@
 export interface GlobalSuccessResponseInterface<T> {
   statusCode: number;
-  message: string;
-  data: T;
+  message: string | null;
+  data: T | null;
 }
