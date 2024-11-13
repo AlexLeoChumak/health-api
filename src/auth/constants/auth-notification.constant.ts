@@ -1,4 +1,4 @@
-interface AuthNotificationInterface {
+export interface AuthNotificationInterface {
   REGISTRATION_SUCCESS: string;
   REGISTRATION_USER_NOT_FOUND_ERROR: string;
   REGISTRATION_PASSWORD_NOT_FOUND_ERROR: string;
