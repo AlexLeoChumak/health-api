@@ -53,7 +53,7 @@ export class PatientResponseDto {
 
   @ValidateNested()
   @Type(() => UserBaseResponseDto)
-  userDataResponse: UserBaseResponseDto;
+  user: UserBaseResponseDto;
 }
 
 // ответ клиенту DoctorResponseDto
@@ -62,5 +62,5 @@ export class DoctorResponseDto {
 
   @ValidateNested()
   @Type(() => DoctorBaseResponseDto)
-  userDataResponse: DoctorBaseResponseDto;
+  user: DoctorBaseResponseDto;
 }
