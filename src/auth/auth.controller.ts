@@ -1,8 +1,14 @@
-import { Controller, Post, Body, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Logger,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 
 import { AuthService } from './auth.service';
-import { RegistrationUserIdResponseInterface } from 'src/auth/models/registration-user-id-response.interface';
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 import {
   DoctorResponseDto,
@@ -16,6 +22,7 @@ import {
   PatientRequestDto,
   PatientRequestIncludesPasswordDto,
 } from 'src/auth/dto/user-request.dto';
+import { RegistrationResponseInterface } from 'src/auth/models/registrationResponse.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -26,9 +33,7 @@ export class AuthController {
   @Post('registration/patient')
   registrationPatient(
     @Body() patientData: PatientRequestDto,
-  ): Observable<
-    GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
-  > {
+  ): Observable<GlobalSuccessResponseInterface<RegistrationResponseInterface>> {
     const extractData: PatientRequestIncludesPasswordDto = patientData?.user;
     return this.authService.registrationPatient(extractData);
   }
@@ -36,14 +41,13 @@ export class AuthController {
   @Post('registration/doctor')
   registrationDoctor(
     @Body() doctorData: DoctorRequestDto,
-  ): Observable<
-    GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
-  > {
+  ): Observable<GlobalSuccessResponseInterface<RegistrationResponseInterface>> {
     const extractData: DoctorRequestIncludesPasswordDto = doctorData?.user;
     return this.authService.registrationDoctor(extractData);
   }
 
   @Post('login/patient')
+  @HttpCode(HttpStatus.OK)
   loginPatient(
     @Body() patientData: LoginRequestDto,
   ): Observable<PatientResponseDto> {
@@ -51,6 +55,7 @@ export class AuthController {
   }
 
   @Post('login/doctor')
+  @HttpCode(HttpStatus.OK)
   loginDoctor(
     @Body() doctorData: LoginRequestDto,
   ): Observable<DoctorResponseDto> {
