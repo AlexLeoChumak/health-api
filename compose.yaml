@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: nestjs-app-dev
+    container_name: nestjs-app
     restart: always
     ports:
       - '3000:3000' # Пробрасываем порт для доступа к приложению
@@ -29,7 +29,7 @@ services:
     build:
       context: ../health # путь к приложению Ionic
       dockerfile: Dockerfile.dev # файл Dockerfile для Ionic
-    container_name: ionic-app
+    container_name: angular-app
     restart: always
     ports:
       - '8100:8100' # Пробрасываем порт для доступа к приложению Ionic
