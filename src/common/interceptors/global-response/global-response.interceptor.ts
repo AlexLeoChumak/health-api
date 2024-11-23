@@ -48,7 +48,6 @@ export class GlobalResponseInterceptor<T> implements NestInterceptor<T> {
           if (
             data &&
             typeof data === 'object' &&
-            'statusCode' in data &&
             'message' in data &&
             'data' in data
           ) {
@@ -57,7 +56,6 @@ export class GlobalResponseInterceptor<T> implements NestInterceptor<T> {
 
           // Обработка данных, если они требуют обёртки
           return of({
-            statusCode: HttpStatus.OK,
             message: 'Операция завершена успешно',
             data: data,
           } as GlobalSuccessResponseInterface<T>);
