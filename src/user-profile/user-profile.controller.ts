@@ -11,7 +11,6 @@ import { Observable } from 'rxjs';
 import { UpdateResult } from 'typeorm';
 
 import { UserProfileService } from './user-profile.service';
-import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 
 @Controller('user-profile')
 export class UserProfileController {
