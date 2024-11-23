@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -16,7 +15,6 @@ import * as bcrypt from 'bcryptjs';
 import { DoctorEntity } from 'src/auth/entities/doctor.entity';
 import { PatientEntity } from 'src/auth/entities/patient.entity';
 
-import { RegistrationUserIdResponseInterface } from 'src/auth/models/registration-user-id-response.interface';
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
 import {
@@ -38,6 +36,7 @@ import {
   PatientRequestIncludesHashedPasswordDto,
   PatientRequestIncludesPasswordDto,
 } from 'src/auth/dto/user-request.dto';
+import { RegistrationResponseInterface } from 'src/auth/models/registrationResponse.interface';
 
 @Injectable()
 export class AuthService {
@@ -53,26 +52,20 @@ export class AuthService {
 
   registrationPatient(
     patientData: PatientRequestIncludesPasswordDto,
-  ): Observable<
-    GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
-  > {
+  ): Observable<GlobalSuccessResponseInterface<RegistrationResponseInterface>> {
     return this.registration(patientData, this.patientRepository);
   }
 
   registrationDoctor(
     doctorData: DoctorRequestIncludesPasswordDto,
-  ): Observable<
-    GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
-  > {
+  ): Observable<GlobalSuccessResponseInterface<RegistrationResponseInterface>> {
     return this.registration(doctorData, this.doctorRepository);
   }
 
   private registration(
     user: PatientRequestIncludesPasswordDto | DoctorRequestIncludesPasswordDto,
     repository: Repository<PatientEntity | DoctorEntity>,
-  ): Observable<
-    GlobalSuccessResponseInterface<RegistrationUserIdResponseInterface>
-  > {
+  ): Observable<GlobalSuccessResponseInterface<RegistrationResponseInterface>> {
     if (!user) {
       throw new NotFoundException(
         AUTH_NOTIFICATIONS.REGISTRATION_USER_NOT_FOUND_ERROR,
@@ -85,9 +78,11 @@ export class AuthService {
       }),
       switchMap((entity) => from(repository.save(entity))),
       map((response) => ({
-        statusCode: HttpStatus.CREATED,
         message: AUTH_NOTIFICATIONS.REGISTRATION_SUCCESS,
-        data: { userId: response.id },
+        data: {
+          userId: response.id,
+          firstName: response.personalInfo.firstName,
+        },
       })),
       catchError((error) => {
         this.logger.log(error);
@@ -157,21 +152,20 @@ export class AuthService {
       loginDto,
       repository,
     ).pipe(
-      switchMap((user: PatientEntity | DoctorEntity) => {
-        return this.comparePassword(loginDto, user).pipe(
+      switchMap((foundUser: PatientEntity | DoctorEntity) => {
+        return this.comparePassword(loginDto, foundUser).pipe(
           map(() => {
             const payload = {
-              sub: user.id,
-              phone: user.contactInfo.mobilePhoneNumber,
+              sub: foundUser.id,
+              phone: foundUser.contactInfo.mobilePhoneNumber,
             };
             const accessToken = this.jwtService.sign(payload);
 
-            const userDataResponse =
-              this.filterUserFieldsForTransferToClientApp(user);
+            const user = this.filterUserFieldsForTransferToClientApp(foundUser);
 
             return isPatientRepository
-              ? ({ accessToken, userDataResponse } as PatientResponseDto)
-              : ({ accessToken, userDataResponse } as DoctorResponseDto);
+              ? ({ accessToken, user } as PatientResponseDto)
+              : ({ accessToken, user } as DoctorResponseDto);
           }),
           catchError((error) => {
             this.logger.log(error);
