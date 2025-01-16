@@ -11,6 +11,7 @@ import { AddressMedicalInstitutionInfoDto } from 'src/auth/dto/address-medical-i
 import { ContactInfoDto } from 'src/auth/dto/contact-info.dto';
 import { EducationMedicalWorkerInfoDto } from 'src/auth/dto/education-medical-worker-info.dto';
 import { IdentificationInfoDto } from 'src/auth/dto/identification-info.dto';
+import { MobilePhoneNumberPasswordInfoDto } from 'src/auth/dto/mobile-phone-number-password-info.dto';
 import { PersonalInfoDto } from 'src/auth/dto/personal-info.dto';
 import { PlaceWorkInfoDto } from 'src/auth/dto/place-work-info.dto';
 
@@ -31,10 +32,14 @@ export class UserBaseRequestDto {
   @ValidateNested()
   @Type(() => PersonalInfoDto)
   personalInfo: PersonalInfoDto;
+
+  @ValidateNested()
+  @Type(() => ContactInfoDto)
+  contactInfo: ContactInfoDto;
 }
 
 // ContactInfo с паролем
-export class ContactInfoIncludesPasswordFieldDto extends ContactInfoDto {
+export class MobilePhoneNumberPasswordInfoIncludesPasswordFieldDto extends MobilePhoneNumberPasswordInfoDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
@@ -42,7 +47,7 @@ export class ContactInfoIncludesPasswordFieldDto extends ContactInfoDto {
 }
 
 // ContactInfo с хешированным паролем
-export class ContactInfoIncludesHashedPasswordFieldDto extends ContactInfoDto {
+export class MobilePhoneNumberPasswordInfoIncludesHashedPasswordFieldDto extends MobilePhoneNumberPasswordInfoDto {
   @IsString()
   @IsNotEmpty()
   hashedPassword: string;
@@ -51,15 +56,15 @@ export class ContactInfoIncludesHashedPasswordFieldDto extends ContactInfoDto {
 // Пациент с паролем (без вложения в объект user)
 export class PatientRequestIncludesPasswordDto extends UserBaseRequestDto {
   @ValidateNested()
-  @Type(() => ContactInfoIncludesPasswordFieldDto)
-  contactInfo: ContactInfoIncludesPasswordFieldDto;
+  @Type(() => MobilePhoneNumberPasswordInfoIncludesPasswordFieldDto)
+  mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfoIncludesPasswordFieldDto;
 }
 
 // Пациент с хешированным паролем (без вложения в объект user)
 export class PatientRequestIncludesHashedPasswordDto extends UserBaseRequestDto {
   @ValidateNested()
-  @Type(() => ContactInfoIncludesHashedPasswordFieldDto)
-  contactInfo: ContactInfoIncludesHashedPasswordFieldDto;
+  @Type(() => MobilePhoneNumberPasswordInfoIncludesHashedPasswordFieldDto)
+  mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfoIncludesHashedPasswordFieldDto;
 }
 
 // Пациентский запрос с клиента (с вложением в объект user)
@@ -87,15 +92,15 @@ export class DoctorBaseRequestDto extends UserBaseRequestDto {
 // Доктор с паролем (без вложения в объект user)
 export class DoctorRequestIncludesPasswordDto extends DoctorBaseRequestDto {
   @ValidateNested()
-  @Type(() => ContactInfoIncludesPasswordFieldDto)
-  contactInfo: ContactInfoIncludesPasswordFieldDto;
+  @Type(() => MobilePhoneNumberPasswordInfoIncludesPasswordFieldDto)
+  mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfoIncludesPasswordFieldDto;
 }
 
 // Доктор с хешированным паролем (без вложения в объект user)
 export class DoctorRequestIncludesHashedPasswordDto extends DoctorBaseRequestDto {
   @ValidateNested()
-  @Type(() => ContactInfoIncludesHashedPasswordFieldDto)
-  contactInfo: ContactInfoIncludesHashedPasswordFieldDto;
+  @Type(() => MobilePhoneNumberPasswordInfoIncludesHashedPasswordFieldDto)
+  mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfoIncludesHashedPasswordFieldDto;
 }
 
 // Докторский запрос с клиента (с вложением в объект user)
