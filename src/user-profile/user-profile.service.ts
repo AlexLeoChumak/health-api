@@ -1,9 +1,4 @@
-import {
-  HttpStatus,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -14,7 +9,6 @@ import {
   map,
   catchError,
   throwError,
-  tap,
 } from 'rxjs';
 import { UpdateResult, Repository } from 'typeorm';
 
@@ -22,9 +16,7 @@ import { DoctorEntity } from 'src/auth/entities/doctor.entity';
 import { PatientEntity, PersonalInfo } from 'src/auth/entities/patient.entity';
 import { B2UploadFileResponseInterface } from 'src/common/models/b2-upload-file-response.interface';
 import { CloudStorageService } from 'src/common/services/cloud-storage/cloud-storage.service';
-import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 import { USER_PROFILE_NOTIFICATIONS } from 'src/user-profile/constans/user-profile-notification.constant';
-import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
 
 @Injectable()
 export class UserProfileService {
