@@ -7,6 +7,7 @@ import {
   AddressResidenceInfo,
   ContactInfo,
   IdentificationInfo,
+  MobilePhoneNumberPasswordInfo,
   PatientEntity,
   PersonalInfo,
 } from 'src/auth/entities/patient.entity';
@@ -46,6 +47,7 @@ import { EntitiesModule } from './entities/entities.module';
           AddressMedicalInstitutionInfo,
           EducationMedicalWorkerInfo,
           PlaceWorkInfo,
+          MobilePhoneNumberPasswordInfo,
         ],
         synchronize: true,
       }),
