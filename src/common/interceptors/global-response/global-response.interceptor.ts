@@ -3,7 +3,6 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  HttpStatus,
   Logger,
   StreamableFile,
   UnsupportedMediaTypeException,
