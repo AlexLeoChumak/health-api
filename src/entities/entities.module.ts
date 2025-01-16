@@ -14,6 +14,7 @@ import {
   ContactInfo,
   IdentificationInfo,
   PersonalInfo,
+  MobilePhoneNumberPasswordInfo,
 } from 'src/auth/entities/patient.entity';
 
 @Module({
@@ -29,6 +30,7 @@ import {
       AddressMedicalInstitutionInfo,
       EducationMedicalWorkerInfo,
       PlaceWorkInfo,
+      MobilePhoneNumberPasswordInfo,
     ]),
   ],
   exports: [TypeOrmModule],
