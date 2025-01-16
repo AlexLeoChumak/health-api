@@ -6,10 +6,11 @@ import { AddressMedicalInstitutionInfoDto } from 'src/auth/dto/address-medical-i
 import { ContactInfoDto } from 'src/auth/dto/contact-info.dto';
 import { EducationMedicalWorkerInfoDto } from 'src/auth/dto/education-medical-worker-info.dto';
 import { IdentificationInfoDto } from 'src/auth/dto/identification-info.dto';
+import { MobilePhoneNumberPasswordInfoDto } from 'src/auth/dto/mobile-phone-number-password-info.dto';
 import { PersonalInfoDto } from 'src/auth/dto/personal-info.dto';
 import { PlaceWorkInfoDto } from 'src/auth/dto/place-work-info.dto';
 
-export class UserBaseResponseDto {
+export class PatientBaseResponseDto {
   @IsString() id: string;
 
   @ValidateNested()
@@ -25,6 +26,10 @@ export class UserBaseResponseDto {
   contactInfo: ContactInfoDto;
 
   @ValidateNested()
+  @Type(() => MobilePhoneNumberPasswordInfoDto)
+  mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfoDto;
+
+  @ValidateNested()
   @Type(() => IdentificationInfoDto)
   identificationInfo: IdentificationInfoDto;
 
@@ -33,7 +38,7 @@ export class UserBaseResponseDto {
   personalInfo: PersonalInfoDto;
 }
 
-export class DoctorBaseResponseDto extends UserBaseResponseDto {
+export class DoctorBaseResponseDto extends PatientBaseResponseDto {
   @ValidateNested()
   @Type(() => AddressMedicalInstitutionInfoDto)
   addressMedicalInstitutionInfo: AddressMedicalInstitutionInfoDto;
@@ -52,8 +57,8 @@ export class PatientResponseDto {
   @IsString() accessToken: string;
 
   @ValidateNested()
-  @Type(() => UserBaseResponseDto)
-  user: UserBaseResponseDto;
+  @Type(() => PatientBaseResponseDto)
+  user: PatientBaseResponseDto;
 }
 
 // ответ клиенту DoctorResponseDto
