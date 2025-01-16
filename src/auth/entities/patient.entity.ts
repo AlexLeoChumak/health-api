@@ -72,6 +72,12 @@ export class ContactInfo {
 
   @Column({ nullable: true })
   homePhoneNumber: string | null;
+}
+
+@Entity('mobile_phone_number_password_info')
+export class MobilePhoneNumberPasswordInfo {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   mobilePhoneNumber: string;
@@ -148,6 +154,9 @@ export class PatientEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ nullable: true })
+  refreshToken: string | null;
+
   // Связь с таблицей AddressInfo для информации о регистрации
   @OneToOne(() => AddressRegistrationInfo, { cascade: true })
   @JoinColumn({ name: 'addressRegistrationInfoId' })
@@ -158,10 +167,14 @@ export class PatientEntity {
   @JoinColumn({ name: 'addressResidenceInfoId' })
   addressResidenceInfo: AddressResidenceInfo;
 
-  // Связь с таблицей ContactInfo для информации о контактах (с хешированным паролем)
+  // Связь с таблицей ContactInfo для информации о контактах
   @OneToOne(() => ContactInfo, { cascade: true })
   @JoinColumn({ name: 'contactInfoId' })
   contactInfo: ContactInfo;
+
+  @OneToOne(() => MobilePhoneNumberPasswordInfo, { cascade: true })
+  @JoinColumn({ name: 'mobilePhoneNumberPasswordInfoId' })
+  mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfo;
 
   // Связь с таблицей IdentificationInfo для информации об идентификации
   @OneToOne(() => IdentificationInfo, { cascade: true })
