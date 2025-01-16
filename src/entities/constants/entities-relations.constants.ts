@@ -3,7 +3,8 @@ export type PatientEntityRelationType =
   | 'addressResidenceInfo'
   | 'contactInfo'
   | 'identificationInfo'
-  | 'personalInfo';
+  | 'personalInfo'
+  | 'mobilePhoneNumberPasswordInfo';
 
 export type DoctorEntityRelationType =
   | PatientEntityRelationType
@@ -17,6 +18,7 @@ export const PATIENT_ENTITY_RELATIONS: PatientEntityRelationType[] = [
   'contactInfo',
   'identificationInfo',
   'personalInfo',
+  'mobilePhoneNumberPasswordInfo',
 ];
 
 export const DOCTOR_ENTITY_RELATIONS: DoctorEntityRelationType[] = [
