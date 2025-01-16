@@ -8,10 +8,10 @@ import {
 import { HttpAdapterHost } from '@nestjs/core';
 
 interface GlobalExceptionResponseInterface {
-  timestamp: string;
   message: string;
-  error: string;
-  statusCode: number;
+  // timestamp: new Date().toISOString(),
+  // error,
+  // statusCode: status,
 }
 
 @Catch()
@@ -30,13 +30,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // Универсальная логика извлечения данных из исключения
     const status: number = this.extractStatus(exception);
     const message: string = this.extractMessage(exception);
-    const error: string = this.extractErrorName(exception);
+    // const error: string = this.extractErrorName(exception);
 
     const responseBody: GlobalExceptionResponseInterface = {
-      timestamp: new Date().toISOString(),
       message,
-      error,
-      statusCode: status,
+      // timestamp: new Date().toISOString(),
+      // error,
+      // statusCode: status,
     };
 
     // Отправляем ответ через httpAdapter
