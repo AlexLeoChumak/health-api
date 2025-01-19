@@ -21,6 +21,7 @@ import { Repository } from 'typeorm';
 
 interface DecodedToken {
   sub: string;
+  phone: string;
   role: string;
   iat: number;
   exp: number;
