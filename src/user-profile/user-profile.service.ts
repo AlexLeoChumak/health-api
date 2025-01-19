@@ -16,7 +16,7 @@ import { DoctorEntity } from 'src/auth/entities/doctor.entity';
 import { PatientEntity, PersonalInfo } from 'src/auth/entities/patient.entity';
 import { B2UploadFileResponseInterface } from 'src/common/models/b2-upload-file-response.interface';
 import { CloudStorageService } from 'src/common/services/cloud-storage/cloud-storage.service';
-import { USER_PROFILE_NOTIFICATIONS } from 'src/user-profile/constans/user-profile-notification.constant';
+import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
 
 @Injectable()
 export class UserProfileService {
@@ -42,7 +42,7 @@ export class UserProfileService {
       user === 'patient' ? this.patientRepository : this.doctorRepository;
 
     const bucketId: string = this.configService.get<string>('BUCKET_ID');
-    const fileName: string = `${userId}_${photo.originalname}`;
+    const fileName: string = photo.originalname;
     const fileBuffer: Buffer = photo.buffer;
     const mimeType: string = photo.mimetype;
 
@@ -54,9 +54,10 @@ export class UserProfileService {
 
     return combineLatest([user$, upload$]).pipe(
       switchMap(([user, cloudStorageResponse]) => {
+        this.logger.log(JSON.stringify(cloudStorageResponse), 'superpuper');
         return this.updateUserPhoto(
           user.personalInfo.id,
-          cloudStorageResponse.fileId,
+          cloudStorageResponse.fileName,
         );
       }),
       catchError((error) => throwError(() => error)),
@@ -75,9 +76,7 @@ export class UserProfileService {
     ).pipe(
       map((user) => {
         if (!user || !user.personalInfo) {
-          throw new NotFoundException(
-            USER_PROFILE_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
-          );
+          throw new NotFoundException(AUTH_NOTIFICATIONS.USER_NOT_FOUND_ERROR);
         }
         return user;
       }),
@@ -98,10 +97,10 @@ export class UserProfileService {
 
   private updateUserPhoto(
     personalInfoId: string,
-    fileId: string,
+    fileName: string,
   ): Observable<UpdateResult> {
     return from(
-      this.personalInfoRepository.update(personalInfoId, { photo: fileId }),
+      this.personalInfoRepository.update(personalInfoId, { photo: fileName }),
     ).pipe(catchError((error) => throwError(() => error)));
   }
 
