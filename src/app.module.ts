@@ -20,6 +20,7 @@ import {
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { UserProfileModule } from './user-profile/user-profile.module';
 import { EntitiesModule } from './entities/entities.module';
+import { BackblazeModule } from './backblaze/backblaze.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { EntitiesModule } from './entities/entities.module';
     AuthModule,
     UserProfileModule,
     EntitiesModule,
+    BackblazeModule,
   ],
   controllers: [],
   providers: [],
