@@ -17,7 +17,6 @@ export class SensitiveFieldsUserService {
 
   public removeSensitiveFieldsFromUser(
     user: PatientEntity | DoctorEntity,
-    isRoot: boolean = true,
   ): PatientBaseResponseDto | DoctorBaseResponseDto {
     if (typeof user !== 'object') {
       throw new InternalServerErrorException(
@@ -26,9 +25,7 @@ export class SensitiveFieldsUserService {
     }
 
     const filteredObj = {};
-    const skipFields = isRoot
-      ? ['hashedPassword', 'refreshToken']
-      : ['id', 'hashedPassword', 'refreshToken'];
+    const skipFields = ['hashedPassword', 'refreshToken'];
 
     for (const [field, value] of Object.entries(user)) {
       if (skipFields.includes(field) || value === undefined) {
@@ -36,7 +33,7 @@ export class SensitiveFieldsUserService {
       }
 
       if (typeof value === 'object' && value !== null) {
-        const nested = this.removeSensitiveFieldsFromUser(value, false);
+        const nested = this.removeSensitiveFieldsFromUser(value);
 
         if (nested && Object.keys(nested).length > 0) {
           filteredObj[field] = nested;
