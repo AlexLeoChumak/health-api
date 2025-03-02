@@ -6,21 +6,23 @@ import {
   AddressRegistrationInfo,
   AddressResidenceInfo,
   ContactInfo,
-  IdentificationInfo,
+  IdentificationBelarusCitizenInfo,
+  IdentificationForeignCitizenInfo,
   MobilePhoneNumberPasswordInfo,
   PatientEntity,
   PersonalInfo,
-} from 'src/auth/entities/patient.entity';
+} from 'src/repositories/entities/patient.entity';
 import {
   AddressMedicalInstitutionInfo,
   DoctorEntity,
   EducationMedicalWorkerInfo,
   PlaceWorkInfo,
-} from 'src/auth/entities/doctor.entity';
+} from 'src/repositories/entities/doctor.entity';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { UserProfileModule } from './user-profile/user-profile.module';
-import { EntitiesModule } from './entities/entities.module';
+
 import { BackblazeModule } from './backblaze/backblaze.module';
+import { RepositoriesModule } from 'src/repositories/repositories.module';
 
 @Module({
   imports: [
@@ -43,8 +45,9 @@ import { BackblazeModule } from './backblaze/backblaze.module';
           AddressRegistrationInfo,
           AddressResidenceInfo,
           ContactInfo,
-          IdentificationInfo,
           PersonalInfo,
+          IdentificationBelarusCitizenInfo,
+          IdentificationForeignCitizenInfo,
           AddressMedicalInstitutionInfo,
           EducationMedicalWorkerInfo,
           PlaceWorkInfo,
@@ -63,10 +66,9 @@ import { BackblazeModule } from './backblaze/backblaze.module';
     }),
     AuthModule,
     UserProfileModule,
-    EntitiesModule,
+    RepositoriesModule,
     BackblazeModule,
   ],
   controllers: [],
-  providers: [],
 })
 export class AppModule {}
