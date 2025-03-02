@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: nestjs-app
+    container_name: nestjs
     restart: always
     ports:
       - '3000:3000' # Пробрасываем порт для доступа к приложению
