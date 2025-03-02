@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { UserProfileService } from './user-profile.service';
 import { UserProfileController } from './user-profile.controller';
 import { CommonModule } from 'src/common/common.module';
-import { EntitiesModule } from 'src/entities/entities.module';
+import { RepositoriesModule } from 'src/repositories/repositories.module';
 
 @Module({
-  imports: [EntitiesModule, CommonModule],
+  imports: [CommonModule, RepositoriesModule],
   controllers: [UserProfileController],
   providers: [UserProfileService],
 })
