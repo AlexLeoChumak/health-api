@@ -3,17 +3,17 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
 import {
   PatientBaseResponseDto,
   DoctorBaseResponseDto,
 } from 'src/auth/dto/user-response.dto';
-import { DoctorEntity } from 'src/auth/entities/doctor.entity';
-import { PatientEntity } from 'src/auth/entities/patient.entity';
+import { DoctorEntity } from 'src/repositories/entities/doctor.entity';
+import { PatientEntity } from 'src/repositories/entities/patient.entity';
+import { AUTH_NOTIFICATIONS } from 'src/auth/constants/auth-notification.constant';
 
 @Injectable()
 export class SensitiveFieldsUserService {
-  private readonly logger = new Logger(); //позже удалить
+  private readonly logger = new Logger();
 
   public removeSensitiveFieldsFromUser(
     user: PatientEntity | DoctorEntity,
