@@ -9,8 +9,8 @@ import { BaseEntityRepository } from 'src/repositories/base-entity.repository';
 export class PatientEntityRepository extends BaseEntityRepository<PatientEntity> {
   constructor(
     @InjectRepository(PatientEntity)
-    protected readonly repository: Repository<PatientEntity>,
-    protected readonly logger: Logger,
+    public readonly repository: Repository<PatientEntity>,
+    public readonly logger: Logger,
   ) {
     super(repository, logger);
   }

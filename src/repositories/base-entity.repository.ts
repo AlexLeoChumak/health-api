@@ -5,8 +5,8 @@ import { DeepPartial, Repository } from 'typeorm';
 @Injectable()
 export abstract class BaseEntityRepository<T> {
   constructor(
-    protected readonly repository: Repository<T>,
-    protected readonly logger: Logger,
+    public readonly repository: Repository<T>,
+    public readonly logger: Logger,
   ) {}
 
   findOneById(userId: string, relations: string[]): Observable<T | null> {
