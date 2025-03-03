@@ -5,7 +5,8 @@ import { AddressInfoDto } from 'src/auth/dto/address-info.dto';
 import { AddressMedicalInstitutionInfoDto } from 'src/auth/dto/address-medical-institution-info.dto';
 import { ContactInfoDto } from 'src/auth/dto/contact-info.dto';
 import { EducationMedicalWorkerInfoDto } from 'src/auth/dto/education-medical-worker-info.dto';
-import { IdentificationInfoDto } from 'src/auth/dto/identification-info.dto';
+import { IdentificationBelarusCitizenInfoDto } from 'src/auth/dto/identification-belarus-citizen-info.dto';
+import { IdentificationForeignCitizenInfoDto } from 'src/auth/dto/identification-foreign-citizen-info.dto';
 import { MobilePhoneNumberPasswordInfoDto } from 'src/auth/dto/mobile-phone-number-password-info.dto';
 import { PersonalInfoDto } from 'src/auth/dto/personal-info.dto';
 import { PlaceWorkInfoDto } from 'src/auth/dto/place-work-info.dto';
@@ -30,8 +31,12 @@ export class PatientBaseResponseDto {
   mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfoDto;
 
   @ValidateNested()
-  @Type(() => IdentificationInfoDto)
-  identificationInfo: IdentificationInfoDto;
+  @Type(() => IdentificationBelarusCitizenInfoDto)
+  identificationBelarusCitizenInfo: IdentificationBelarusCitizenInfoDto;
+
+  @ValidateNested()
+  @Type(() => IdentificationForeignCitizenInfoDto)
+  identificationForeignCitizenInfo: IdentificationForeignCitizenInfoDto;
 
   @ValidateNested()
   @Type(() => PersonalInfoDto)
