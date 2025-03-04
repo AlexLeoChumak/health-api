@@ -8,7 +8,7 @@ import {
 
 // Сущность AddressInfo для хранения данных об адресах
 @Entity('address_registration_info')
-export class AddressRegistrationInfo {
+export class AddressRegistrationInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -35,7 +35,7 @@ export class AddressRegistrationInfo {
 }
 
 @Entity('address_residence_info')
-export class AddressResidenceInfo {
+export class AddressResidenceInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -63,7 +63,7 @@ export class AddressResidenceInfo {
 
 // Сущность ContactInfo для хранения данных о контактах
 @Entity('contact_info')
-export class ContactInfo {
+export class ContactInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -75,7 +75,7 @@ export class ContactInfo {
 }
 
 @Entity('mobile_phone_number_password_info')
-export class MobilePhoneNumberPasswordInfo {
+export class MobilePhoneNumberPasswordInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -88,7 +88,7 @@ export class MobilePhoneNumberPasswordInfo {
 
 // Сущность IdentificationBelarusCitizenInfo для хранения идентификационных данных гражданина Беларуси
 @Entity('identification_belarus_citizen_info')
-export class IdentificationBelarusCitizenInfo {
+export class IdentificationBelarusCitizenInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -107,7 +107,7 @@ export class IdentificationBelarusCitizenInfo {
 
 // Сущность IdentificationForeignCitizenInfo для хранения идентификационных данных иностранного гражданина
 @Entity('identification_foreign_citizen_info')
-export class IdentificationForeignCitizenInfo {
+export class IdentificationForeignCitizenInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -129,7 +129,7 @@ export class IdentificationForeignCitizenInfo {
 
 // Сущность PersonalInfo для хранения персональных данных
 @Entity('personal_info')
-export class PersonalInfo {
+export class PersonalInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -162,34 +162,34 @@ export class PatientEntity {
   refreshToken: string | null;
 
   // Связь с таблицей AddressInfo для информации о регистрации
-  @OneToOne(() => AddressRegistrationInfo, { cascade: true })
+  @OneToOne(() => AddressRegistrationInfoEntity, { cascade: true })
   @JoinColumn({ name: 'addressRegistrationInfoId' })
-  addressRegistrationInfo: AddressRegistrationInfo;
+  addressRegistrationInfo: AddressRegistrationInfoEntity;
 
   // Связь с таблицей AddressInfo для информации о месте жительства
-  @OneToOne(() => AddressResidenceInfo, { cascade: true })
+  @OneToOne(() => AddressResidenceInfoEntity, { cascade: true })
   @JoinColumn({ name: 'addressResidenceInfoId' })
-  addressResidenceInfo: AddressResidenceInfo;
+  addressResidenceInfo: AddressResidenceInfoEntity;
 
   // Связь с таблицей ContactInfo для информации о контактах
-  @OneToOne(() => ContactInfo, { cascade: true })
+  @OneToOne(() => ContactInfoEntity, { cascade: true })
   @JoinColumn({ name: 'contactInfoId' })
-  contactInfo: ContactInfo;
+  contactInfo: ContactInfoEntity;
 
-  @OneToOne(() => MobilePhoneNumberPasswordInfo, { cascade: true })
+  @OneToOne(() => MobilePhoneNumberPasswordInfoEntity, { cascade: true })
   @JoinColumn({ name: 'mobilePhoneNumberPasswordInfoId' })
-  mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfo;
+  mobilePhoneNumberPasswordInfo: MobilePhoneNumberPasswordInfoEntity;
 
-  @OneToOne(() => IdentificationBelarusCitizenInfo, { cascade: true })
+  @OneToOne(() => IdentificationBelarusCitizenInfoEntity, { cascade: true })
   @JoinColumn({ name: 'identificationBelarusCitizenInfoId' })
-  identificationBelarusCitizenInfo: IdentificationBelarusCitizenInfo;
+  identificationBelarusCitizenInfo: IdentificationBelarusCitizenInfoEntity;
 
-  @OneToOne(() => IdentificationForeignCitizenInfo, { cascade: true })
+  @OneToOne(() => IdentificationForeignCitizenInfoEntity, { cascade: true })
   @JoinColumn({ name: 'identificationForeignCitizenInfoId' })
-  identificationForeignCitizenInfo: IdentificationForeignCitizenInfo;
+  identificationForeignCitizenInfo: IdentificationForeignCitizenInfoEntity;
 
   // Связь с таблицей PersonalInfo для персональной информации
-  @OneToOne(() => PersonalInfo, { cascade: true })
+  @OneToOne(() => PersonalInfoEntity, { cascade: true })
   @JoinColumn({ name: 'personalInfoId' })
-  personalInfo: PersonalInfo;
+  personalInfo: PersonalInfoEntity;
 }
