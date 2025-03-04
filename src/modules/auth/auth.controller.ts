@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Logger,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { Observable } from 'rxjs';
 
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
