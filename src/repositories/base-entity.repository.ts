@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { from, Observable } from 'rxjs';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Repository, UpdateResult } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 @Injectable()
 export abstract class BaseEntityRepository<T> {
@@ -37,5 +38,12 @@ export abstract class BaseEntityRepository<T> {
 
   getTargetEntity(): any {
     return this.repository.target;
+  }
+
+  update(
+    id: string,
+    partialEntity: QueryDeepPartialEntity<T>,
+  ): Observable<UpdateResult> {
+    return from(this.repository.update(id, partialEntity));
   }
 }
