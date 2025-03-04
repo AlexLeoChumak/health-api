@@ -9,7 +9,7 @@ import { PatientEntity } from './patient.entity';
 
 // Сущность для информации о медицинском учреждении
 @Entity('address_medical_institution_info')
-export class AddressMedicalInstitutionInfo {
+export class AddressMedicalInstitutionInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -34,7 +34,7 @@ export class AddressMedicalInstitutionInfo {
 
 // Сущность для информации об образовании медработника
 @Entity('education_medical_worker_info')
-export class EducationMedicalWorkerInfo {
+export class EducationMedicalWorkerInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -62,7 +62,7 @@ export class EducationMedicalWorkerInfo {
 
 // Сущность для информации о месте работы медработника
 @Entity('place_work_info')
-export class PlaceWorkInfo {
+export class PlaceWorkInfoEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -80,17 +80,17 @@ export class PlaceWorkInfo {
 @Entity('doctors')
 export class DoctorEntity extends PatientEntity {
   // Связь с таблицей AddressMedicalInstitutionInfo для информации о медицинском учреждении
-  @OneToOne(() => AddressMedicalInstitutionInfo, { cascade: true })
+  @OneToOne(() => AddressMedicalInstitutionInfoEntity, { cascade: true })
   @JoinColumn({ name: 'addressMedicalInstitutionInfoId' })
-  addressMedicalInstitutionInfo: AddressMedicalInstitutionInfo;
+  addressMedicalInstitutionInfo: AddressMedicalInstitutionInfoEntity;
 
   // Связь с таблицей EducationMedicalWorkerInfo для информации об образовании медработника
-  @OneToOne(() => EducationMedicalWorkerInfo, { cascade: true })
+  @OneToOne(() => EducationMedicalWorkerInfoEntity, { cascade: true })
   @JoinColumn({ name: 'educationMedicalWorkerInfoId' })
-  educationMedicalWorkerInfo: EducationMedicalWorkerInfo;
+  educationMedicalWorkerInfo: EducationMedicalWorkerInfoEntity;
 
   // Связь с таблицей PlaceWorkInfo для информации о месте работы
-  @OneToOne(() => PlaceWorkInfo, { cascade: true })
+  @OneToOne(() => PlaceWorkInfoEntity, { cascade: true })
   @JoinColumn({ name: 'placeWorkInfoId' })
-  placeWorkInfo: PlaceWorkInfo;
+  placeWorkInfo: PlaceWorkInfoEntity;
 }
