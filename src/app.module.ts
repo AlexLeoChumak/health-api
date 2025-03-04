@@ -1,33 +1,35 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from 'src/auth/auth.module';
-import {
-  AddressRegistrationInfo,
-  AddressResidenceInfo,
-  ContactInfo,
-  IdentificationBelarusCitizenInfo,
-  IdentificationForeignCitizenInfo,
-  MobilePhoneNumberPasswordInfo,
-  PatientEntity,
-  PersonalInfo,
-} from 'src/repositories/entities/patient.entity';
-import {
-  AddressMedicalInstitutionInfo,
-  DoctorEntity,
-  EducationMedicalWorkerInfo,
-  PlaceWorkInfo,
-} from 'src/repositories/entities/doctor.entity';
-import { RedisModule } from '@nestjs-modules/ioredis';
-import { UserProfileModule } from './user-profile/user-profile.module';
 
-import { BackblazeModule } from './backblaze/backblaze.module';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { UserProfileModule } from './modules/user-profile/user-profile.module';
 import { RepositoriesModule } from 'src/repositories/repositories.module';
+import { AuthModule } from 'src/modules/auth/auth.module';
+import { validateConfig } from 'src/config/env.config';
+import { CloudStorageModule } from 'src/shared/cloud-storage/cloud-storage.module';
+import {
+  DoctorEntity,
+  AddressMedicalInstitutionInfoEntity,
+  EducationMedicalWorkerInfoEntity,
+  PlaceWorkInfoEntity,
+} from 'src/repositories/entities/doctor.entity';
+import {
+  PatientEntity,
+  AddressRegistrationInfoEntity,
+  AddressResidenceInfoEntity,
+  ContactInfoEntity,
+  PersonalInfoEntity,
+  IdentificationBelarusCitizenInfoEntity,
+  IdentificationForeignCitizenInfoEntity,
+  MobilePhoneNumberPasswordInfoEntity,
+} from 'src/repositories/entities/patient.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: validateConfig,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -42,16 +44,16 @@ import { RepositoriesModule } from 'src/repositories/repositories.module';
         entities: [
           PatientEntity,
           DoctorEntity,
-          AddressRegistrationInfo,
-          AddressResidenceInfo,
-          ContactInfo,
-          PersonalInfo,
-          IdentificationBelarusCitizenInfo,
-          IdentificationForeignCitizenInfo,
-          AddressMedicalInstitutionInfo,
-          EducationMedicalWorkerInfo,
-          PlaceWorkInfo,
-          MobilePhoneNumberPasswordInfo,
+          AddressRegistrationInfoEntity,
+          AddressResidenceInfoEntity,
+          ContactInfoEntity,
+          PersonalInfoEntity,
+          IdentificationBelarusCitizenInfoEntity,
+          IdentificationForeignCitizenInfoEntity,
+          AddressMedicalInstitutionInfoEntity,
+          EducationMedicalWorkerInfoEntity,
+          PlaceWorkInfoEntity,
+          MobilePhoneNumberPasswordInfoEntity,
         ],
         synchronize: true,
       }),
@@ -67,7 +69,7 @@ import { RepositoriesModule } from 'src/repositories/repositories.module';
     AuthModule,
     UserProfileModule,
     RepositoriesModule,
-    BackblazeModule,
+    CloudStorageModule,
   ],
   controllers: [],
 })
