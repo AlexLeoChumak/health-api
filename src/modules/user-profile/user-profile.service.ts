@@ -15,7 +15,7 @@ import { PatientEntityRepository } from 'src/repositories/patient-entity.reposit
 import { UpdatePasswordDto } from 'src/modules/user-profile/dto/update-password.dto';
 import { MobilePhoneNumberPasswordInfoEntityRepository } from 'src/repositories/mobile-phone-number-password-info-entity.repository';
 import { SHARED_NOTIFICATIONS } from 'src/shared/constants/shared.constant';
-import { USER_PROFILE_NOTIFICATIONS } from 'src/modules/user-profile/constants/user-profile.constant';
+import { USER_PROFILE_CONSTANT } from 'src/modules/user-profile/constants/user-profile.constant';
 
 @Injectable()
 export class UserProfileService {
@@ -111,7 +111,7 @@ export class UserProfileService {
             return throwError(
               () =>
                 new BadRequestException(
-                  USER_PROFILE_NOTIFICATIONS.CURRENT_PASSWORD_INVALID,
+                  USER_PROFILE_CONSTANT.CURRENT_PASSWORD_INVALID,
                 ),
             );
           }
@@ -123,7 +123,7 @@ export class UserProfileService {
             return throwError(
               () =>
                 new BadRequestException(
-                  USER_PROFILE_NOTIFICATIONS.NEW_PASSWORDS_NO_MATCH,
+                  USER_PROFILE_CONSTANT.NEW_PASSWORDS_NO_MATCH,
                 ),
             );
           }
@@ -142,7 +142,7 @@ export class UserProfileService {
             ),
           ).pipe(
             map(() => {
-              return USER_PROFILE_NOTIFICATIONS.PASSWORD_UPDATED_SUCCESSFULLY;
+              return USER_PROFILE_CONSTANT.PASSWORD_UPDATED_SUCCESSFULLY;
             }),
           );
         }),
