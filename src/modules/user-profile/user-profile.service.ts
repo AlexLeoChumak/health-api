@@ -1,11 +1,21 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UpdateResult } from 'typeorm';
-import { Observable, from, switchMap } from 'rxjs';
+import { Observable, from, map, switchMap, throwError } from 'rxjs';
+import * as bcrypt from 'bcryptjs';
 import { CloudStorageService } from 'src/shared/cloud-storage/cloud-storage.service';
 import { PersonalInfoEntityRepository } from 'src/repositories/personal-info-entity.repository';
 import { DoctorEntityRepository } from 'src/repositories/doctor-entity.repository';
 import { PatientEntityRepository } from 'src/repositories/patient-entity.repository';
+import { UpdatePasswordDto } from 'src/modules/user-profile/dto/update-password.dto';
+import { MobilePhoneNumberPasswordInfoEntityRepository } from 'src/repositories/mobile-phone-number-password-info-entity.repository';
+import { SHARED_NOTIFICATIONS } from 'src/shared/constants/shared.constant';
+import { USER_PROFILE_NOTIFICATIONS } from 'src/modules/user-profile/constants/user-profile.constant';
 
 @Injectable()
 export class UserProfileService {
@@ -15,6 +25,7 @@ export class UserProfileService {
     private readonly patientEntityRepository: PatientEntityRepository,
     private readonly doctorEntityRepository: DoctorEntityRepository,
     private readonly personalInfoRepository: PersonalInfoEntityRepository,
+    private readonly mobilePhoneNumberPasswordInfoRepository: MobilePhoneNumberPasswordInfoEntityRepository,
     private readonly logger: Logger,
   ) {}
 
@@ -43,7 +54,10 @@ export class UserProfileService {
     return repository.findOneById(userId, ['personalInfo']).pipe(
       switchMap((user) => {
         if (!user || !user.personalInfo) {
-          throw new NotFoundException('User not found');
+          return throwError(
+            () =>
+              new NotFoundException(SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR),
+          );
         }
 
         return this.cloudStorageService
@@ -64,5 +78,74 @@ export class UserProfileService {
           );
       }),
     );
+  }
+
+  public updatePassword(updateData: UpdatePasswordDto): Observable<string> {
+    const repository =
+      updateData.userRole === 'patient'
+        ? this.patientEntityRepository
+        : this.doctorEntityRepository;
+
+    return repository
+      .findOneById(updateData.userId, ['mobilePhoneNumberPasswordInfo'])
+      .pipe(
+        switchMap((user) => {
+          if (!user || !user.mobilePhoneNumberPasswordInfo) {
+            return throwError(
+              () =>
+                new NotFoundException(
+                  SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+                ),
+            );
+          }
+
+          return from(
+            bcrypt.compare(
+              updateData.oldPassword,
+              user.mobilePhoneNumberPasswordInfo.hashedPassword,
+            ),
+          ).pipe(map((isMatch) => ({ user, isMatch })));
+        }),
+        switchMap(({ user, isMatch }) => {
+          if (!isMatch) {
+            return throwError(
+              () =>
+                new BadRequestException(
+                  USER_PROFILE_NOTIFICATIONS.CURRENT_PASSWORD_INVALID,
+                ),
+            );
+          }
+
+          if (
+            !updateData.newPassword ||
+            updateData.newPassword !== updateData.newPasswordConfirmation
+          ) {
+            return throwError(
+              () =>
+                new BadRequestException(
+                  USER_PROFILE_NOTIFICATIONS.NEW_PASSWORDS_NO_MATCH,
+                ),
+            );
+          }
+
+          const saltRounds: number = 10;
+
+          return from(bcrypt.hash(updateData.newPassword, saltRounds)).pipe(
+            map((hashedPassword) => ({ user, hashedPassword })),
+          );
+        }),
+        switchMap(({ user, hashedPassword }) => {
+          return from(
+            this.mobilePhoneNumberPasswordInfoRepository.update(
+              user.mobilePhoneNumberPasswordInfo.id,
+              { hashedPassword },
+            ),
+          ).pipe(
+            map(() => {
+              return USER_PROFILE_NOTIFICATIONS.PASSWORD_UPDATED_SUCCESSFULLY;
+            }),
+          );
+        }),
+      );
   }
 }
