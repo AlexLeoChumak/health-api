@@ -1,11 +1,11 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { AUTH_NOTIFICATIONS } from 'src/modules/auth/constants/auth-notification.constant';
 import { DoctorEntity } from 'src/repositories/entities/doctor.entity';
 import { PatientEntity } from 'src/repositories/entities/patient.entity';
 import {
   PatientBaseResponseDto,
   DoctorBaseResponseDto,
 } from 'src/modules/auth/dto/user-response.dto';
+import { SHARED_NOTIFICATIONS } from 'src/shared/constants/shared.constant';
 
 @Injectable()
 export class SensitiveFieldsUserService {
@@ -14,7 +14,7 @@ export class SensitiveFieldsUserService {
   ): PatientBaseResponseDto | DoctorBaseResponseDto {
     if (typeof user !== 'object') {
       throw new InternalServerErrorException(
-        AUTH_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+        SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
       );
     }
 
