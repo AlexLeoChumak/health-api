@@ -8,11 +8,13 @@ import {
   HttpException,
   HttpStatus,
   Query,
+  Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Observable } from 'rxjs';
 import { UpdateResult } from 'typeorm';
 import { UserProfileService } from './user-profile.service';
+import { UpdatePasswordDto } from 'src/modules/user-profile/dto/update-password.dto';
 
 @Controller('user-profile')
 export class UserProfileController {
@@ -46,5 +48,10 @@ export class UserProfileController {
     @UploadedFile() photo: Express.Multer.File,
   ): Observable<UpdateResult> {
     return this.userProfileService.uploadUserPhoto(user, userId, photo);
+  }
+
+  @Patch('update-password')
+  updatePassword(@Body() updateData: UpdatePasswordDto): Observable<string> {
+    return this.userProfileService.updatePassword(updateData);
   }
 }
