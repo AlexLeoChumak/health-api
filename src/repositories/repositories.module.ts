@@ -19,6 +19,7 @@ import {
   PersonalInfoEntity,
   MobilePhoneNumberPasswordInfoEntity,
 } from 'src/repositories/entities/patient.entity';
+import { MobilePhoneNumberPasswordInfoEntityRepository } from 'src/repositories/mobile-phone-number-password-info-entity.repository';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import {
     PatientEntityRepository,
     DoctorEntityRepository,
     PersonalInfoEntityRepository,
+    MobilePhoneNumberPasswordInfoEntityRepository,
     Logger,
   ],
   exports: [
@@ -48,6 +50,7 @@ import {
     PatientEntityRepository,
     DoctorEntityRepository,
     PersonalInfoEntityRepository,
+    MobilePhoneNumberPasswordInfoEntityRepository,
   ],
 })
 export class RepositoriesModule {}
