@@ -14,7 +14,7 @@ import { DoctorEntityRepository } from 'src/repositories/doctor-entity.repositor
 import { PatientEntityRepository } from 'src/repositories/patient-entity.repository';
 import { UpdatePasswordDto } from 'src/modules/user-profile/dto/update-password.dto';
 import { MobilePhoneNumberPasswordInfoEntityRepository } from 'src/repositories/mobile-phone-number-password-info-entity.repository';
-import { SHARED_NOTIFICATIONS } from 'src/shared/constants/shared.constant';
+import { SHARED_CONSTANT } from 'src/shared/constants/shared.constant';
 import { USER_PROFILE_CONSTANT } from 'src/modules/user-profile/constants/user-profile.constant';
 
 @Injectable()
@@ -55,8 +55,7 @@ export class UserProfileService {
       switchMap((user) => {
         if (!user || !user.personalInfo) {
           return throwError(
-            () =>
-              new NotFoundException(SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR),
+            () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
           );
         }
 
@@ -92,10 +91,7 @@ export class UserProfileService {
         switchMap((user) => {
           if (!user || !user.mobilePhoneNumberPasswordInfo) {
             return throwError(
-              () =>
-                new NotFoundException(
-                  SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
-                ),
+              () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
             );
           }
 

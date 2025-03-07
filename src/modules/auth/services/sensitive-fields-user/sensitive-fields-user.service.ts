@@ -5,7 +5,7 @@ import {
   PatientBaseResponseDto,
   DoctorBaseResponseDto,
 } from 'src/modules/auth/dto/user-response.dto';
-import { SHARED_NOTIFICATIONS } from 'src/shared/constants/shared.constant';
+import { SHARED_CONSTANT } from 'src/shared/constants/shared.constant';
 
 @Injectable()
 export class SensitiveFieldsUserService {
@@ -14,7 +14,7 @@ export class SensitiveFieldsUserService {
   ): PatientBaseResponseDto | DoctorBaseResponseDto {
     if (typeof user !== 'object') {
       throw new InternalServerErrorException(
-        SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+        SHARED_CONSTANT.USER_NOT_FOUND_ERROR,
       );
     }
 

@@ -12,7 +12,7 @@ import { PatientEntityRepository } from 'src/repositories/patient-entity.reposit
 import { DoctorEntityRepository } from 'src/repositories/doctor-entity.repository';
 import { AUTH_NOTIFICATIONS } from 'src/modules/auth/constants/auth-notification.constant';
 import { SensitiveFieldsUserService } from 'src/modules/auth/services/sensitive-fields-user/sensitive-fields-user.service';
-import { SHARED_NOTIFICATIONS } from 'src/shared/constants/shared.constant';
+import { SHARED_CONSTANT } from 'src/shared/constants/shared.constant';
 import {
   PatientResponseDto,
   DoctorResponseDto,
@@ -78,9 +78,7 @@ export class AccessRefreshTokenService {
               if (!user) {
                 return throwError(
                   () =>
-                    new NotFoundException(
-                      SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
-                    ),
+                    new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
                 );
               }
               // Глубокое копирование без потери класса
@@ -117,9 +115,7 @@ export class AccessRefreshTokenService {
             if (!user) {
               throwError(
                 () =>
-                  new NotFoundException(
-                    SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
-                  ),
+                  new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
               );
             }
 
@@ -155,10 +151,7 @@ export class AccessRefreshTokenService {
         switchMap((user) => {
           if (!user || !user.refreshToken) {
             return throwError(
-              () =>
-                new NotFoundException(
-                  SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
-                ),
+              () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
             );
           }
 
