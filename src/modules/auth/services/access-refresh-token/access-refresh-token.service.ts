@@ -12,18 +12,12 @@ import { PatientEntityRepository } from 'src/repositories/patient-entity.reposit
 import { DoctorEntityRepository } from 'src/repositories/doctor-entity.repository';
 import { AUTH_NOTIFICATIONS } from 'src/modules/auth/constants/auth-notification.constant';
 import { SensitiveFieldsUserService } from 'src/modules/auth/services/sensitive-fields-user/sensitive-fields-user.service';
+import { SHARED_NOTIFICATIONS } from 'src/shared/constants/shared.constant';
 import {
   PatientResponseDto,
   DoctorResponseDto,
 } from 'src/modules/auth/dto/user-response.dto';
-
-interface DecodedToken {
-  sub: string;
-  phone: string;
-  role: string;
-  iat: number;
-  exp: number;
-}
+import { DecodedAccessRefreshTokenInterface } from 'src/modules/auth/models/decoded-access-refresh-token.interface';
 
 @Injectable()
 export class AccessRefreshTokenService {
@@ -75,22 +69,25 @@ export class AccessRefreshTokenService {
   ): Observable<void> {
     return from(
       this.validateToken(refreshToken).pipe(
-        switchMap((decoded: DecodedToken) => {
-          const repository = this.getRepository(decoded.role);
+        switchMap((decodedToken: DecodedAccessRefreshTokenInterface) => {
+          const repository = this.getRepository(decodedToken.role);
           const relations = getEntityRelationsUtility(repository);
 
           return repository.findOneById(userId, relations).pipe(
             switchMap((user) => {
               if (!user) {
-                throw new NotFoundException(
-                  AUTH_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+                return throwError(
+                  () =>
+                    new NotFoundException(
+                      SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+                    ),
                 );
               }
               // Глубокое копирование без потери класса
               const updatedUser = Object.assign(
-                Object.create(Object.getPrototypeOf(user)), // Создаём объект с тем же прототипом
+                Object.create(Object.getPrototypeOf(user)), // объект с тем же прототипом
                 structuredClone(user), // Глубокая копия всех данных
-                { refreshToken }, // Добавляем новый refreshToken
+                { refreshToken }, // новый refreshToken
               );
 
               return repository.save(updatedUser);
@@ -111,15 +108,18 @@ export class AccessRefreshTokenService {
     accessToken: string,
   ): Observable<PatientResponseDto | DoctorResponseDto> {
     return from(this.validateToken(accessToken)).pipe(
-      switchMap((decoded: DecodedToken) => {
-        const repository = this.getRepository(decoded.role);
+      switchMap((decodedToken: DecodedAccessRefreshTokenInterface) => {
+        const repository = this.getRepository(decodedToken.role);
         const relations = getEntityRelationsUtility(repository);
 
-        return repository.findOneById(decoded.sub, relations).pipe(
+        return repository.findOneById(decodedToken.sub, relations).pipe(
           map((user) => {
             if (!user) {
-              throw new NotFoundException(
-                AUTH_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+              throwError(
+                () =>
+                  new NotFoundException(
+                    SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+                  ),
               );
             }
 
@@ -139,21 +139,26 @@ export class AccessRefreshTokenService {
   public refreshAccessToken(
     accessToken: string,
   ): Observable<PatientResponseDto | DoctorResponseDto> {
-    const decoded = this.jwtService.decode(accessToken) as DecodedToken;
+    const decodedToken = this.jwtService.decode(
+      accessToken,
+    ) as DecodedAccessRefreshTokenInterface;
 
-    if (!decoded || !decoded.sub || !decoded.role) {
+    if (!decodedToken || !decodedToken.sub || !decodedToken.role) {
       throw new NotFoundException(AUTH_NOTIFICATIONS.TOKEN_INVALID);
     }
 
-    const repository = this.getRepository(decoded.role);
+    const repository = this.getRepository(decodedToken.role);
     const relations = getEntityRelationsUtility(repository);
 
     return from(
-      repository.findOneById(decoded.sub, relations).pipe(
+      repository.findOneById(decodedToken.sub, relations).pipe(
         switchMap((user) => {
           if (!user || !user.refreshToken) {
-            throw new NotFoundException(
-              AUTH_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+            return throwError(
+              () =>
+                new NotFoundException(
+                  SHARED_NOTIFICATIONS.USER_NOT_FOUND_ERROR,
+                ),
             );
           }
 
@@ -177,15 +182,17 @@ export class AccessRefreshTokenService {
     );
   }
 
-  private validateToken(token: string): Observable<DecodedToken> {
+  private validateToken(
+    token: string,
+  ): Observable<DecodedAccessRefreshTokenInterface> {
     return from(this.jwtService.verifyAsync(token)).pipe(
-      map((decoded: DecodedToken) => {
+      map((decodedToken: DecodedAccessRefreshTokenInterface) => {
         const currentTimestamp = Math.floor(Date.now() / 1000);
 
-        if (decoded.exp <= currentTimestamp) {
+        if (decodedToken.exp <= currentTimestamp) {
           throw new UnauthorizedException();
         }
-        return decoded;
+        return decodedToken;
       }),
     );
   }
