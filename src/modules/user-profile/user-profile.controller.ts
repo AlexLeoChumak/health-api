@@ -9,16 +9,22 @@ import {
   HttpStatus,
   Query,
   Body,
+  Logger,
+  Put,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Observable } from 'rxjs';
 import { UpdateResult } from 'typeorm';
 import { UserProfileService } from './user-profile.service';
 import { UpdatePasswordDto } from 'src/modules/user-profile/dto/update-password.dto';
+import { UpdateUserInfoGroupDto } from 'src/modules/user-profile/dto/update-user-info-group.dto';
 
 @Controller('user-profile')
 export class UserProfileController {
-  constructor(private readonly userProfileService: UserProfileService) {}
+  constructor(
+    private readonly userProfileService: UserProfileService,
+    private readonly logger: Logger,
+  ) {}
 
   @Get('get-photo')
   getPrivatePhotoUrl(
@@ -53,5 +59,12 @@ export class UserProfileController {
   @Patch('update-password')
   updatePassword(@Body() updateData: UpdatePasswordDto): Observable<string> {
     return this.userProfileService.updatePassword(updateData);
+  }
+
+  @Put('update-info-group')
+  updateInfoGroup(
+    @Body() updateData: UpdateUserInfoGroupDto,
+  ): Observable<string> {
+    return this.userProfileService.updateInfoGroup(updateData);
   }
 }
