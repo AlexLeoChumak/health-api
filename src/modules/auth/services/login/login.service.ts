@@ -13,7 +13,7 @@ import { PatientEntityRepository } from 'src/repositories/patient-entity.reposit
 import { AUTH_NOTIFICATIONS } from 'src/modules/auth/constants/auth-notification.constant';
 import { LoginRequestDto } from 'src/modules/auth/dto/login-request.dto';
 import { AccessRefreshTokenService } from 'src/modules/auth/services/access-refresh-token/access-refresh-token.service';
-import { SensitiveFieldsUserService } from 'src/modules/auth/services/sensitive-fields-user/sensitive-fields-user.service';
+import { SensitiveFieldsUserService } from 'src/shared/services/sensitive-fields-user/sensitive-fields-user.service';
 import {
   PatientResponseDto,
   DoctorResponseDto,
