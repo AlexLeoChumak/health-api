@@ -7,7 +7,7 @@ import { UserProfileModule } from './modules/user-profile/user-profile.module';
 import { RepositoriesModule } from 'src/repositories/repositories.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { validateConfig } from 'src/config/env.config';
-import { CloudStorageModule } from 'src/shared/cloud-storage/cloud-storage.module';
+import { CloudStorageModule } from 'src/shared/modules/cloud-storage/cloud-storage.module';
 import {
   DoctorEntity,
   AddressMedicalInstitutionInfoEntity,
@@ -24,6 +24,7 @@ import {
   IdentificationForeignCitizenInfoEntity,
   MobilePhoneNumberPasswordInfoEntity,
 } from 'src/repositories/entities/patient.entity';
+import { JwtConfigModule } from './shared/modules/jwt-config/jwt-config.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import {
     UserProfileModule,
     RepositoriesModule,
     CloudStorageModule,
+    JwtConfigModule,
   ],
   controllers: [],
 })
