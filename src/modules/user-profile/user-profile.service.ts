@@ -5,27 +5,49 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UpdateResult } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { Observable, from, map, switchMap, throwError } from 'rxjs';
 import * as bcrypt from 'bcryptjs';
-import { CloudStorageService } from 'src/shared/cloud-storage/cloud-storage.service';
+import { CloudStorageService } from 'src/shared/modules/cloud-storage/cloud-storage.service';
 import { PersonalInfoEntityRepository } from 'src/repositories/personal-info-entity.repository';
 import { DoctorEntityRepository } from 'src/repositories/doctor-entity.repository';
 import { PatientEntityRepository } from 'src/repositories/patient-entity.repository';
 import { UpdatePasswordDto } from 'src/modules/user-profile/dto/update-password.dto';
 import { MobilePhoneNumberPasswordInfoEntityRepository } from 'src/repositories/mobile-phone-number-password-info-entity.repository';
-import { SHARED_CONSTANT } from 'src/shared/constants/shared.constant';
+import { SHARED_CONSTANT } from 'src/common/constants/shared.constant';
 import { USER_PROFILE_CONSTANT } from 'src/modules/user-profile/constants/user-profile.constant';
+import { UpdateUserInfoGroupDto } from 'src/modules/user-profile/dto/update-user-info-group.dto';
+import { AddressMedicalInstitutionInfoEntityRepository } from 'src/repositories/address-medical-institution-info-entity.repository';
+import { AddressRegistrationInfoEntityRepository } from 'src/repositories/address-registration-info-entity.repository';
+import { AddressResidenceInfoEntityRepository } from 'src/repositories/address-residence-info-entity.repository';
+import { ContactInfoEntityRepository } from 'src/repositories/contact-info-entity.repository';
+import { EducationMedicalWorkerInfoEntityRepository } from 'src/repositories/education-medical-worker-info-entity.repository';
+import { IdentificationBelarusCitizenInfoEntityRepository } from 'src/repositories/identification-belarus-citizen-info-entity.repository';
+import { IdentificationForeignCitizenInfoEntityRepository } from 'src/repositories/identification-foreign-citizen-info-entity.repository';
+import { PlaceWorkInfoEntityRepository } from 'src/repositories/place-work-info-entity.repository';
+import { UpdateUserInfoGroupType } from 'src/modules/user-profile/models/update-user-info-group.type';
+import { getEntityRelationsUtility } from 'src/repositories/utilities/entities-relations.utility';
+import { DecodedAccessRefreshTokenInterface } from 'src/common/models/decoded-access-refresh-token.interface';
+import { SensitiveFieldsUserService } from 'src/shared/services/sensitive-fields-user/sensitive-fields-user.service';
 
 @Injectable()
 export class UserProfileService {
   constructor(
     private readonly configService: ConfigService,
     private readonly cloudStorageService: CloudStorageService,
+    private readonly sensitiveFieldsUserService: SensitiveFieldsUserService,
     private readonly patientEntityRepository: PatientEntityRepository,
     private readonly doctorEntityRepository: DoctorEntityRepository,
     private readonly personalInfoRepository: PersonalInfoEntityRepository,
     private readonly mobilePhoneNumberPasswordInfoRepository: MobilePhoneNumberPasswordInfoEntityRepository,
+    private readonly addressMedicalInstitutionInfoEntityRepository: AddressMedicalInstitutionInfoEntityRepository,
+    private readonly addressRegistrationInfoEntityRepository: AddressRegistrationInfoEntityRepository,
+    private readonly addressResidenceInfoEntityRepository: AddressResidenceInfoEntityRepository,
+    private readonly contactInfoEntityRepository: ContactInfoEntityRepository,
+    private readonly educationMedicalWorkerInfoEntityRepository: EducationMedicalWorkerInfoEntityRepository,
+    private readonly identificationBelarusCitizenInfoEntityRepository: IdentificationBelarusCitizenInfoEntityRepository,
+    private readonly identificationForeignCitizenInfoEntityRepository: IdentificationForeignCitizenInfoEntityRepository,
+    private readonly placeWorkInfoEntityRepository: PlaceWorkInfoEntityRepository,
     private readonly logger: Logger,
   ) {}
 
@@ -143,5 +165,99 @@ export class UserProfileService {
           );
         }),
       );
+  }
+
+  public updateInfoGroup(
+    updateData: UpdateUserInfoGroupDto,
+  ): Observable<string> {
+    const repository =
+      updateData.userRole === 'patient'
+        ? this.patientEntityRepository
+        : this.doctorEntityRepository;
+
+    const keyName = Object.keys(updateData.updateInfoGroup)[0];
+
+    return repository.findOneById(updateData.userId, [keyName]).pipe(
+      switchMap((user) => {
+        if (!user || !user[keyName]) {
+          return throwError(
+            () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
+          );
+        }
+
+        const infoGroupId = user[keyName]?.id;
+        const infoGroupRepository = this.getInfoGroupRepository(keyName);
+
+        return from(
+          infoGroupRepository.update(
+            infoGroupId,
+            updateData.updateInfoGroup[keyName],
+          ),
+        ).pipe(
+          map((result) => {
+            if (result.affected === 0) {
+              throw new NotFoundException(
+                USER_PROFILE_CONSTANT.INFO_GROUP_NOT_FOUND,
+              );
+            }
+            return USER_PROFILE_CONSTANT.INFO_GROUP_UPDATED_SUCCESSFULLY;
+          }),
+        );
+      }),
+    );
+  }
+
+  private getInfoGroupRepository(
+    keyName: string,
+  ): Repository<UpdateUserInfoGroupType> {
+    const repositoriesMap = {
+      personalInfo: this.personalInfoRepository,
+      mobilePhoneNumberPasswordInfo:
+        this.mobilePhoneNumberPasswordInfoRepository,
+      addressMedicalInstitutionInfo:
+        this.addressMedicalInstitutionInfoEntityRepository,
+      addressRegistrationInfo: this.addressRegistrationInfoEntityRepository,
+      addressResidenceInfo: this.addressResidenceInfoEntityRepository,
+      contactInfo: this.contactInfoEntityRepository,
+      educationMedicalWorkerInfo:
+        this.educationMedicalWorkerInfoEntityRepository,
+      identificationBelarusCitizenInfo:
+        this.identificationBelarusCitizenInfoEntityRepository,
+      identificationForeignCitizenInfo:
+        this.identificationForeignCitizenInfoEntityRepository,
+      placeWorkInfo: this.placeWorkInfoEntityRepository,
+    };
+
+    const repository = repositoriesMap[keyName];
+    if (!repository) {
+      throw new NotFoundException(USER_PROFILE_CONSTANT.REPOSITORY_NOT_FOUND);
+    }
+
+    return repository;
+  }
+
+  public getUserInfo(
+    userDecodedToken: DecodedAccessRefreshTokenInterface,
+  ): any {
+    const repository =
+      userDecodedToken.role === 'patient'
+        ? this.patientEntityRepository
+        : this.doctorEntityRepository;
+
+    const relations = getEntityRelationsUtility(repository);
+
+    return repository.findOneById(userDecodedToken.sub, relations).pipe(
+      map((user) => {
+        if (!user) {
+          return throwError(
+            () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
+          );
+        }
+
+        return this.sensitiveFieldsUserService.removeSensitiveFieldsFromUser(
+          user,
+        );
+      }),
+    );
   }
 }
