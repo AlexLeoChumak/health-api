@@ -11,6 +11,8 @@ import {
   Body,
   Logger,
   Put,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Observable } from 'rxjs';
@@ -18,6 +20,12 @@ import { UpdateResult } from 'typeorm';
 import { UserProfileService } from './user-profile.service';
 import { UpdatePasswordDto } from 'src/modules/user-profile/dto/update-password.dto';
 import { UpdateUserInfoGroupDto } from 'src/modules/user-profile/dto/update-user-info-group.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import {
+  DoctorResponseDto,
+  PatientResponseDto,
+} from 'src/modules/auth/dto/user-response.dto';
+import { CustomRequestInterface } from 'src/common/models/custom-request.interface';
 
 @Controller('user-profile')
 export class UserProfileController {
@@ -25,6 +33,15 @@ export class UserProfileController {
     private readonly userProfileService: UserProfileService,
     private readonly logger: Logger,
   ) {}
+
+  @Get('get-info')
+  @UseGuards(JwtAuthGuard)
+  getUserInfo(
+    @Request() req: CustomRequestInterface,
+  ): PatientResponseDto | DoctorResponseDto {
+    const userDecodedToken = req.userDecodedToken;
+    return this.userProfileService.getUserInfo(userDecodedToken);
+  }
 
   @Get('get-photo')
   getPrivatePhotoUrl(
