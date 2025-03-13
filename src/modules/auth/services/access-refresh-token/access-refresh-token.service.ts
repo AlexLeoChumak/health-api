@@ -11,13 +11,13 @@ import { getEntityRelationsUtility } from 'src/repositories/utilities/entities-r
 import { PatientEntityRepository } from 'src/repositories/patient-entity.repository';
 import { DoctorEntityRepository } from 'src/repositories/doctor-entity.repository';
 import { AUTH_NOTIFICATIONS } from 'src/modules/auth/constants/auth-notification.constant';
-import { SensitiveFieldsUserService } from 'src/modules/auth/services/sensitive-fields-user/sensitive-fields-user.service';
-import { SHARED_CONSTANT } from 'src/shared/constants/shared.constant';
+import { SensitiveFieldsUserService } from 'src/shared/services/sensitive-fields-user/sensitive-fields-user.service';
+import { SHARED_CONSTANT } from 'src/common/constants/shared.constant';
 import {
   PatientResponseDto,
   DoctorResponseDto,
 } from 'src/modules/auth/dto/user-response.dto';
-import { DecodedAccessRefreshTokenInterface } from 'src/modules/auth/models/decoded-access-refresh-token.interface';
+import { DecodedAccessRefreshTokenInterface } from 'src/common/models/decoded-access-refresh-token.interface';
 
 @Injectable()
 export class AccessRefreshTokenService {
