@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { UserRoleType } from 'src/modules/user-profile/models/user-role.type';
+import { UserRoleType } from 'src/common/models/user-role.type';
 
 export class UpdatePasswordDto {
   @IsString() @IsNotEmpty() userId: string;
