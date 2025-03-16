@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Repository, UpdateResult } from 'typeorm';
-import { Observable, from, map, switchMap, throwError } from 'rxjs';
+import { Observable, from, map, of, switchMap, throwError } from 'rxjs';
 import * as bcrypt from 'bcryptjs';
 import { CloudStorageService } from 'src/shared/modules/cloud-storage/cloud-storage.service';
 import { PersonalInfoEntityRepository } from 'src/repositories/personal-info-entity.repository';
@@ -29,6 +29,11 @@ import { UpdateUserInfoGroupType } from 'src/modules/user-profile/models/update-
 import { getEntityRelationsUtility } from 'src/repositories/utilities/entities-relations.utility';
 import { DecodedAccessRefreshTokenInterface } from 'src/common/models/decoded-access-refresh-token.interface';
 import { SensitiveFieldsUserService } from 'src/shared/services/sensitive-fields-user/sensitive-fields-user.service';
+import { UserRoleType } from 'src/common/models/user-role.type';
+import {
+  DoctorBaseResponseDto,
+  PatientBaseResponseDto,
+} from 'src/modules/auth/dto/user-response.dto';
 
 @Injectable()
 export class UserProfileService {
@@ -64,14 +69,11 @@ export class UserProfileService {
   }
 
   public uploadUserPhoto(
-    user: 'patient' | 'doctor',
+    user: UserRoleType,
     userId: string,
     photo: Express.Multer.File,
   ): Observable<UpdateResult> {
-    const repository =
-      user === 'patient'
-        ? this.patientEntityRepository
-        : this.doctorEntityRepository;
+    const repository = this.getUserRepository(user);
 
     return repository.findOneById(userId, ['personalInfo']).pipe(
       switchMap((user) => {
@@ -102,10 +104,7 @@ export class UserProfileService {
   }
 
   public updatePassword(updateData: UpdatePasswordDto): Observable<string> {
-    const repository =
-      updateData.userRole === 'patient'
-        ? this.patientEntityRepository
-        : this.doctorEntityRepository;
+    const repository = this.getUserRepository(updateData.userRole);
 
     return repository
       .findOneById(updateData.userId, ['mobilePhoneNumberPasswordInfo'])
@@ -170,11 +169,7 @@ export class UserProfileService {
   public updateInfoGroup(
     updateData: UpdateUserInfoGroupDto,
   ): Observable<string> {
-    const repository =
-      updateData.userRole === 'patient'
-        ? this.patientEntityRepository
-        : this.doctorEntityRepository;
-
+    const repository = this.getUserRepository(updateData.userRole);
     const keyName = Object.keys(updateData.updateInfoGroup)[0];
 
     return repository.findOneById(updateData.userId, [keyName]).pipe(
@@ -238,26 +233,30 @@ export class UserProfileService {
 
   public getUserInfo(
     userDecodedToken: DecodedAccessRefreshTokenInterface,
-  ): any {
-    const repository =
-      userDecodedToken.role === 'patient'
-        ? this.patientEntityRepository
-        : this.doctorEntityRepository;
-
+  ): Observable<PatientBaseResponseDto | DoctorBaseResponseDto> {
+    const repository = this.getUserRepository(userDecodedToken.role);
     const relations = getEntityRelationsUtility(repository);
 
-    return repository.findOneById(userDecodedToken.sub, relations).pipe(
-      map((user) => {
+    return from(repository.findOneById(userDecodedToken.sub, relations)).pipe(
+      switchMap((user) => {
         if (!user) {
           return throwError(
             () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
           );
         }
 
-        return this.sensitiveFieldsUserService.removeSensitiveFieldsFromUser(
-          user,
+        return of(
+          this.sensitiveFieldsUserService.removeSensitiveFieldsFromUser(user),
         );
       }),
     );
+  }
+
+  private getUserRepository(
+    userRole: string,
+  ): PatientEntityRepository | DoctorEntityRepository {
+    return userRole === 'patient'
+      ? this.patientEntityRepository
+      : this.doctorEntityRepository;
   }
 }
