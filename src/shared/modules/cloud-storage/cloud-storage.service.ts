@@ -1,8 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { Observable, from, map, switchMap, throwError } from 'rxjs';
 import B2 from 'backblaze-b2';
+import { PhotoUserProfileInterface } from 'src/shared/modules/cloud-storage/models/photo-user-profile.interface';
+import { SHARED_CONSTANT } from 'src/common/constants/shared.constant';
 
 @Injectable()
 export class CloudStorageService {
@@ -16,9 +18,11 @@ export class CloudStorageService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly logger: Logger,
   ) {
     this.keyId = this.configService.get<string>('BACKBLAZE_APP_KEY_ID');
     this.appKey = this.configService.get<string>('BACKBLAZE_APP_KEY');
+
     this.b2 = new B2({
       applicationKeyId: this.keyId,
       applicationKey: this.appKey,
@@ -44,7 +48,7 @@ export class CloudStorageService {
       switchMap(() => {
         if (!this.apiUrl || !this.authToken) {
           return throwError(
-            () => new HttpException('Not authorized', HttpStatus.FORBIDDEN),
+            () => new ForbiddenException(SHARED_CONSTANT.FORBIDDEN_EXCEPTION),
           );
         }
 
@@ -68,7 +72,7 @@ export class CloudStorageService {
     fileName: string,
     fileBuffer: Buffer,
     mimeType: string,
-  ): Observable<{ fileName: string }> {
+  ): Observable<PhotoUserProfileInterface> {
     return this.authorize().pipe(
       switchMap(() => from(this.b2.getUploadUrl({ bucketId }))),
       switchMap(({ data: { uploadUrl, authorizationToken } }) =>
@@ -82,7 +86,27 @@ export class CloudStorageService {
           }),
         ),
       ),
-      map(({ data }) => ({ fileName: data.fileName })),
+      map(({ data }) => ({ fileName: data.fileName, fileId: data.fileId })),
+    );
+  }
+
+  public deletePhoto(fileName: string, fileId: string): Observable<void> {
+    return this.authorize().pipe(
+      switchMap(() => {
+        if (!this.authToken) {
+          return throwError(
+            () => new ForbiddenException(SHARED_CONSTANT.FORBIDDEN_EXCEPTION),
+          );
+        }
+
+        return from(
+          this.b2.deleteFileVersion({
+            fileId,
+            fileName,
+          }),
+        );
+      }),
+      map(() => void 0),
     );
   }
 }
