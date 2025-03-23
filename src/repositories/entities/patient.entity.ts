@@ -150,6 +150,9 @@ export class PersonalInfoEntity {
 
   @Column({ nullable: true })
   photo: string | null;
+
+  @Column({ nullable: true })
+  photoId: string | null;
 }
 
 // Сущность Patient, включающая все связи
