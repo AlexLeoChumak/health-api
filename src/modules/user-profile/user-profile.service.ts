@@ -95,6 +95,7 @@ export class UserProfileService {
               return from(
                 this.personalInfoRepository.update(user.personalInfo.id, {
                   photo: uploadResponse.fileName,
+                  photoId: uploadResponse.fileId,
                 }),
               );
             }),
@@ -103,74 +104,12 @@ export class UserProfileService {
     );
   }
 
-  public updatePassword(updateData: UpdatePasswordDto): Observable<string> {
-    const repository = this.getUserRepository(updateData.userRole);
-
-    return repository
-      .findOneById(updateData.userId, ['mobilePhoneNumberPasswordInfo'])
-      .pipe(
-        switchMap((user) => {
-          if (!user || !user.mobilePhoneNumberPasswordInfo) {
-            return throwError(
-              () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
-            );
-          }
-
-          return from(
-            bcrypt.compare(
-              updateData.oldPassword,
-              user.mobilePhoneNumberPasswordInfo.hashedPassword,
-            ),
-          ).pipe(map((isMatch) => ({ user, isMatch })));
-        }),
-        switchMap(({ user, isMatch }) => {
-          if (!isMatch) {
-            return throwError(
-              () =>
-                new BadRequestException(
-                  USER_PROFILE_CONSTANT.CURRENT_PASSWORD_INVALID,
-                ),
-            );
-          }
-
-          if (
-            !updateData.newPassword ||
-            updateData.newPassword !== updateData.newPasswordConfirmation
-          ) {
-            return throwError(
-              () =>
-                new BadRequestException(
-                  USER_PROFILE_CONSTANT.NEW_PASSWORDS_NO_MATCH,
-                ),
-            );
-          }
-
-          const saltRounds: number = 10;
-
-          return from(bcrypt.hash(updateData.newPassword, saltRounds)).pipe(
-            map((hashedPassword) => ({ user, hashedPassword })),
-          );
-        }),
-        switchMap(({ user, hashedPassword }) => {
-          return from(
-            this.mobilePhoneNumberPasswordInfoRepository.update(
-              user.mobilePhoneNumberPasswordInfo.id,
-              { hashedPassword },
-            ),
-          ).pipe(
-            map(() => {
-              return USER_PROFILE_CONSTANT.PASSWORD_UPDATED_SUCCESSFULLY;
-            }),
-          );
-        }),
-      );
-  }
-
   public updateInfoGroup(
     updateData: UpdateUserInfoGroupDto,
   ): Observable<string> {
     const repository = this.getUserRepository(updateData.userRole);
     const keyName = Object.keys(updateData.updateInfoGroup)[0];
+    const isPersonalInfoGroup = keyName === 'personalInfo';
 
     return repository.findOneById(updateData.userId, [keyName]).pipe(
       switchMap((user) => {
@@ -189,12 +128,28 @@ export class UserProfileService {
             updateData.updateInfoGroup[keyName],
           ),
         ).pipe(
-          map((result) => {
+          switchMap((result) => {
             if (result.affected === 0) {
-              throw new NotFoundException(
-                USER_PROFILE_CONSTANT.INFO_GROUP_NOT_FOUND,
+              return throwError(
+                () =>
+                  new NotFoundException(
+                    USER_PROFILE_CONSTANT.INFO_GROUP_NOT_FOUND,
+                  ),
               );
             }
+
+            const userData = updateData.updateInfoGroup[keyName];
+
+            if (isPersonalInfoGroup && userData.photo) {
+              return this.cloudStorageService.deletePhoto(
+                updateData.currentUserPhotoData.name,
+                updateData.currentUserPhotoData.id,
+              );
+            }
+
+            return of(null); // Чтобы цепочка не прерывалась, если if не сработает
+          }),
+          map(() => {
             return USER_PROFILE_CONSTANT.INFO_GROUP_UPDATED_SUCCESSFULLY;
           }),
         );
@@ -258,5 +213,68 @@ export class UserProfileService {
     return userRole === 'patient'
       ? this.patientEntityRepository
       : this.doctorEntityRepository;
+  }
+
+  public updatePassword(updateData: UpdatePasswordDto): Observable<string> {
+    const repository = this.getUserRepository(updateData.userRole);
+
+    return repository
+      .findOneById(updateData.userId, ['mobilePhoneNumberPasswordInfo'])
+      .pipe(
+        switchMap((user) => {
+          if (!user || !user.mobilePhoneNumberPasswordInfo) {
+            return throwError(
+              () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
+            );
+          }
+
+          return from(
+            bcrypt.compare(
+              updateData.oldPassword,
+              user.mobilePhoneNumberPasswordInfo.hashedPassword,
+            ),
+          ).pipe(map((isMatch) => ({ user, isMatch })));
+        }),
+        switchMap(({ user, isMatch }) => {
+          if (!isMatch) {
+            return throwError(
+              () =>
+                new BadRequestException(
+                  USER_PROFILE_CONSTANT.CURRENT_PASSWORD_INVALID,
+                ),
+            );
+          }
+
+          if (
+            !updateData.newPassword ||
+            updateData.newPassword !== updateData.newPasswordConfirmation
+          ) {
+            return throwError(
+              () =>
+                new BadRequestException(
+                  USER_PROFILE_CONSTANT.NEW_PASSWORDS_NO_MATCH,
+                ),
+            );
+          }
+
+          const saltRounds: number = 10;
+
+          return from(bcrypt.hash(updateData.newPassword, saltRounds)).pipe(
+            map((hashedPassword) => ({ user, hashedPassword })),
+          );
+        }),
+        switchMap(({ user, hashedPassword }) => {
+          return from(
+            this.mobilePhoneNumberPasswordInfoRepository.update(
+              user.mobilePhoneNumberPasswordInfo.id,
+              { hashedPassword },
+            ),
+          ).pipe(
+            map(() => {
+              return USER_PROFILE_CONSTANT.PASSWORD_UPDATED_SUCCESSFULLY;
+            }),
+          );
+        }),
+      );
   }
 }
