@@ -66,6 +66,7 @@ export class UserProfileController {
   }
 
   @Patch(':user/:id/upload-photo')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('photo'))
   uploadUserPhoto(
     @Param('user') user: UserRoleType,
@@ -75,17 +76,17 @@ export class UserProfileController {
     return this.userProfileService.uploadUserPhoto(user, userId, photo);
   }
 
-  @Patch('update-password')
-  @UseGuards(JwtAuthGuard)
-  updatePassword(@Body() updateData: UpdatePasswordDto): Observable<string> {
-    return this.userProfileService.updatePassword(updateData);
-  }
-
   @Put('update-info-group')
   @UseGuards(JwtAuthGuard)
   updateInfoGroup(
     @Body() updateData: UpdateUserInfoGroupDto,
   ): Observable<string> {
     return this.userProfileService.updateInfoGroup(updateData);
+  }
+
+  @Patch('update-password')
+  @UseGuards(JwtAuthGuard)
+  updatePassword(@Body() updateData: UpdatePasswordDto): Observable<string> {
+    return this.userProfileService.updatePassword(updateData);
   }
 }
