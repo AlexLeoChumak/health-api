@@ -7,7 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Observable, from, switchMap, map, catchError, throwError } from 'rxjs';
 import { DoctorEntity } from 'src/repositories/entities/doctor.entity';
 import { PatientEntity } from 'src/repositories/entities/patient.entity';
-import { getEntityRelationsUtility } from 'src/repositories/utilities/entities-relations.utility';
+import { getEntityRelationsUtil } from 'src/repositories/utils/entities-relations.util';
 import { PatientEntityRepository } from 'src/repositories/patient-entity.repository';
 import { DoctorEntityRepository } from 'src/repositories/doctor-entity.repository';
 import { AUTH_NOTIFICATIONS } from 'src/modules/auth/constants/auth-notification.constant';
@@ -71,7 +71,7 @@ export class AccessRefreshTokenService {
       this.validateToken(refreshToken).pipe(
         switchMap((decodedToken: DecodedAccessRefreshTokenInterface) => {
           const repository = this.getRepository(decodedToken.role);
-          const relations = getEntityRelationsUtility(repository);
+          const relations = getEntityRelationsUtil(repository);
 
           return repository.findOneById(userId, relations).pipe(
             switchMap((user) => {
@@ -108,7 +108,7 @@ export class AccessRefreshTokenService {
     return from(this.validateToken(accessToken)).pipe(
       switchMap((decodedToken: DecodedAccessRefreshTokenInterface) => {
         const repository = this.getRepository(decodedToken.role);
-        const relations = getEntityRelationsUtility(repository);
+        const relations = getEntityRelationsUtil(repository);
 
         return repository.findOneById(decodedToken.sub, relations).pipe(
           map((user) => {
@@ -144,7 +144,7 @@ export class AccessRefreshTokenService {
     }
 
     const repository = this.getRepository(decodedToken.role);
-    const relations = getEntityRelationsUtility(repository);
+    const relations = getEntityRelationsUtil(repository);
 
     return from(
       repository.findOneById(decodedToken.sub, relations).pipe(

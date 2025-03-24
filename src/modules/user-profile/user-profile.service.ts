@@ -26,7 +26,7 @@ import { IdentificationBelarusCitizenInfoEntityRepository } from 'src/repositori
 import { IdentificationForeignCitizenInfoEntityRepository } from 'src/repositories/identification-foreign-citizen-info-entity.repository';
 import { PlaceWorkInfoEntityRepository } from 'src/repositories/place-work-info-entity.repository';
 import { UpdateUserInfoGroupType } from 'src/modules/user-profile/models/update-user-info-group.type';
-import { getEntityRelationsUtility } from 'src/repositories/utilities/entities-relations.utility';
+import { getEntityRelationsUtil } from 'src/repositories/utils/entities-relations.util';
 import { DecodedAccessRefreshTokenInterface } from 'src/common/models/decoded-access-refresh-token.interface';
 import { SensitiveFieldsUserService } from 'src/shared/services/sensitive-fields-user/sensitive-fields-user.service';
 import { UserRoleType } from 'src/common/models/user-role.type';
@@ -190,7 +190,7 @@ export class UserProfileService {
     userDecodedToken: DecodedAccessRefreshTokenInterface,
   ): Observable<PatientBaseResponseDto | DoctorBaseResponseDto> {
     const repository = this.getUserRepository(userDecodedToken.role);
-    const relations = getEntityRelationsUtility(repository);
+    const relations = getEntityRelationsUtil(repository);
 
     return from(repository.findOneById(userDecodedToken.sub, relations)).pipe(
       switchMap((user) => {

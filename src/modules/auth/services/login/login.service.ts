@@ -7,7 +7,7 @@ import { Observable, switchMap, map, catchError, throwError, from } from 'rxjs';
 import * as bcrypt from 'bcryptjs';
 import { DoctorEntity } from 'src/repositories/entities/doctor.entity';
 import { PatientEntity } from 'src/repositories/entities/patient.entity';
-import { getEntityRelationsUtility } from 'src/repositories/utilities/entities-relations.utility';
+import { getEntityRelationsUtil } from 'src/repositories/utils/entities-relations.util';
 import { DoctorEntityRepository } from 'src/repositories/doctor-entity.repository';
 import { PatientEntityRepository } from 'src/repositories/patient-entity.repository';
 import { AUTH_NOTIFICATIONS } from 'src/modules/auth/constants/auth-notification.constant';
@@ -96,7 +96,7 @@ export class LoginService {
     loginDto: LoginRequestDto,
     repository: PatientEntityRepository | DoctorEntityRepository,
   ) {
-    const relations = getEntityRelationsUtility(repository);
+    const relations = getEntityRelationsUtil(repository);
 
     return repository
       .findOneByMobilePhoneNumber(loginDto?.mobilePhoneNumber, relations)
