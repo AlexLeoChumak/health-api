@@ -5,14 +5,13 @@ import {
   UploadedFile,
   UseInterceptors,
   Get,
-  HttpException,
-  HttpStatus,
   Query,
   Body,
   Logger,
   Put,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Observable } from 'rxjs';
@@ -27,6 +26,7 @@ import {
   DoctorBaseResponseDto,
   PatientBaseResponseDto,
 } from 'src/modules/auth/dto/user-response.dto';
+import { SHARED_CONSTANT } from 'src/common/constants/shared.constant';
 
 @Controller('user-profile')
 export class UserProfileController {
@@ -52,10 +52,7 @@ export class UserProfileController {
     @Query('bucketName') bucketName: string,
   ): Observable<string> {
     if (!bucketId || !fileName || !bucketName) {
-      throw new HttpException(
-        'Missing bucketId or fileName or bucketName',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException(SHARED_CONSTANT.REQUIRED_DATA_MISSING);
     }
 
     return this.userProfileService.getPrivatePhotoUrl(
