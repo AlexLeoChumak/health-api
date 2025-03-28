@@ -4,6 +4,7 @@ export interface SharedConstantInterface {
   TOKEN_INVALID_OR_EXPIRED: string;
   APPLICATION_ERROR: string;
   FORBIDDEN_EXCEPTION: string;
+  REQUIRED_DATA_MISSING: string;
 }
 
 export const SHARED_CONSTANT: SharedConstantInterface = {
@@ -12,4 +13,5 @@ export const SHARED_CONSTANT: SharedConstantInterface = {
   TOKEN_INVALID_OR_EXPIRED: 'Недействительный или просроченный токен',
   APPLICATION_ERROR: 'Ошибка приложения. Пожалуйста, обновите страницу',
   FORBIDDEN_EXCEPTION: 'Доступ запрещен',
+  REQUIRED_DATA_MISSING: 'Отсутствуют необходимые данные',
 };
