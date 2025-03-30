@@ -1,13 +1,13 @@
+import { BadRequestException } from '@nestjs/common';
+import { Repository } from 'typeorm';
 import { PatientEntity } from 'src/repositories/entities/patient.entity';
+import { REPOSITORY_CONSTANT } from 'src/repositories/constants/repository.constant';
 import {
   PatientEntityRelationType,
   DoctorEntityRelationType,
   PATIENT_ENTITY_RELATIONS,
   DOCTOR_ENTITY_RELATIONS,
 } from 'src/repositories/constants/entity-relations.constants';
-import { Repository } from 'typeorm';
-import { BadRequestException } from '@nestjs/common';
-import { REPOSITORY_CONSTANT } from 'src/repositories/constants/repository.constant';
 
 export const getEntityRelationsUtil = <T>(repository: {
   repository: Repository<T>;
