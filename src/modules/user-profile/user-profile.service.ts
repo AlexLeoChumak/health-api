@@ -34,6 +34,8 @@ import {
   DoctorBaseResponseDto,
   PatientBaseResponseDto,
 } from 'src/modules/auth/dto/user-response.dto';
+import { PatientEntity } from 'src/repositories/entities/patient.entity';
+import { DoctorEntity } from 'src/repositories/entities/doctor.entity';
 
 @Injectable()
 export class UserProfileService {
@@ -69,11 +71,11 @@ export class UserProfileService {
   }
 
   public uploadUserPhoto(
-    user: UserRoleType,
+    type: UserRoleType,
     userId: string,
     photo: Express.Multer.File,
   ): Observable<UpdateResult> {
-    const repository = this.getUserRepository(user);
+    const repository = this.getUserRepository(type);
 
     return repository.findOneById(userId, ['personalInfo']).pipe(
       switchMap((user) => {
@@ -207,14 +209,6 @@ export class UserProfileService {
     );
   }
 
-  private getUserRepository(
-    userRole: string,
-  ): PatientEntityRepository | DoctorEntityRepository {
-    return userRole === 'patient'
-      ? this.patientEntityRepository
-      : this.doctorEntityRepository;
-  }
-
   public updatePassword(updateData: UpdatePasswordDto): Observable<string> {
     const repository = this.getUserRepository(updateData.userRole);
 
@@ -276,5 +270,41 @@ export class UserProfileService {
           );
         }),
       );
+  }
+
+  public removeUser(userId: string, type: UserRoleType): Observable<string> {
+    if (!userId) {
+      throw new NotFoundException(SHARED_CONSTANT.REQUIRED_DATA_MISSING);
+    }
+
+    const repository = this.getUserRepository(type);
+    const relations = getEntityRelationsUtil(repository);
+
+    return from(repository.findOneById(userId, relations)).pipe(
+      switchMap((user) => {
+        if (!user) {
+          return throwError(
+            () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
+          );
+        }
+
+        if (repository instanceof PatientEntityRepository) {
+          return from(repository.remove(user as PatientEntity));
+        } else if (repository instanceof DoctorEntityRepository) {
+          return from(repository.remove(user as DoctorEntity));
+        }
+      }),
+      map(() => {
+        return USER_PROFILE_CONSTANT.USER_DELETE_SUCCESS;
+      }),
+    );
+  }
+
+  private getUserRepository(
+    userRole: string,
+  ): PatientEntityRepository | DoctorEntityRepository {
+    return userRole === 'patient'
+      ? this.patientEntityRepository
+      : this.doctorEntityRepository;
   }
 }
