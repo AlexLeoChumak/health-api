@@ -10,7 +10,7 @@ export abstract class BaseEntityRepository<T> {
     public readonly logger: Logger,
   ) {}
 
-  findOneById(userId: string, relations: string[]): Observable<T | null> {
+  findOneById(userId: string, relations: string[] = []): Observable<T | null> {
     return from(
       this.repository.findOne({ where: { id: userId } as any, relations }),
     );
@@ -45,5 +45,9 @@ export abstract class BaseEntityRepository<T> {
     partialEntity: QueryDeepPartialEntity<T>,
   ): Observable<UpdateResult> {
     return from(this.repository.update(id, partialEntity));
+  }
+
+  remove(user: T): Observable<T> {
+    return from(this.repository.remove(user));
   }
 }
