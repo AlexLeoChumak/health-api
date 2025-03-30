@@ -5,6 +5,7 @@ export interface UserProfileConstantInterface {
   INFO_GROUP_UPDATED_SUCCESSFULLY: string;
   INFO_GROUP_NOT_FOUND: string;
   REPOSITORY_NOT_FOUND: string;
+  USER_DELETE_SUCCESS: string;
 }
 
 export const USER_PROFILE_CONSTANT: UserProfileConstantInterface = {
@@ -14,4 +15,5 @@ export const USER_PROFILE_CONSTANT: UserProfileConstantInterface = {
   INFO_GROUP_UPDATED_SUCCESSFULLY: 'Информация успешно обновлёна',
   INFO_GROUP_NOT_FOUND: 'Информационная группа не найдена',
   REPOSITORY_NOT_FOUND: 'Репозиторий не найден',
+  USER_DELETE_SUCCESS: 'Пользователь успешно удалён',
 };
