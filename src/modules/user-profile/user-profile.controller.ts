@@ -12,6 +12,7 @@ import {
   UseGuards,
   Request,
   BadRequestException,
+  Delete,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Observable } from 'rxjs';
@@ -62,15 +63,15 @@ export class UserProfileController {
     );
   }
 
-  @Patch(':user/:id/upload-photo')
+  @Patch(':type/:id/upload-photo')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('photo'))
   uploadUserPhoto(
-    @Param('user') user: UserRoleType,
+    @Param('type') type: UserRoleType,
     @Param('id') userId: string,
     @UploadedFile() photo: Express.Multer.File,
   ): Observable<UpdateResult> {
-    return this.userProfileService.uploadUserPhoto(user, userId, photo);
+    return this.userProfileService.uploadUserPhoto(type, userId, photo);
   }
 
   @Put('update-info-group')
@@ -85,5 +86,13 @@ export class UserProfileController {
   @UseGuards(JwtAuthGuard)
   updatePassword(@Body() updateData: UpdatePasswordDto): Observable<string> {
     return this.userProfileService.updatePassword(updateData);
+  }
+
+  @Delete('remove/:type/:id')
+  removeUser(
+    @Param('id') userId: string,
+    @Param('type') type: UserRoleType,
+  ): Observable<string> {
+    return this.userProfileService.removeUser(userId, type);
   }
 }
