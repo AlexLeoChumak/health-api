@@ -1,5 +1,14 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  UseGuards,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 import { GlobalSuccessResponseInterface } from 'src/common/models/global-success-response.interface';
 import { LoginRequestDto } from 'src/modules/auth/dto/login-request.dto';
@@ -13,6 +22,7 @@ import {
   PatientResponseDto,
   DoctorResponseDto,
 } from 'src/modules/auth/dto/user-response.dto';
+import { VerifyPasswordDto } from 'src/modules/auth/dto/verify-password.dto';
 import { RegistrationResponseInterface } from 'src/modules/auth/models/registration-response.interface';
 import { AccessRefreshTokenService } from 'src/modules/auth/services/access-refresh-token/access-refresh-token.service';
 import { LoginService } from 'src/modules/auth/services/login/login.service';
@@ -24,6 +34,7 @@ export class AuthController {
     private readonly registrationService: RegistrationService,
     private readonly loginService: LoginService,
     private readonly accessRefreshTokenService: AccessRefreshTokenService,
+    private readonly logger: Logger,
   ) {}
 
   @Post('registration/patient')
@@ -70,5 +81,18 @@ export class AuthController {
     @Body('accessToken') accessToken: string,
   ): Observable<PatientResponseDto | DoctorResponseDto> {
     return this.accessRefreshTokenService.refreshAccessToken(accessToken);
+  }
+
+  @Post('verify-password')
+  @UseGuards(JwtAuthGuard)
+  comparePassword(
+    @Body() passwordUserIdData: VerifyPasswordDto,
+  ): Observable<boolean> {
+    const { password, userId, userType } = passwordUserIdData;
+    return this.loginService.findUserByIdForVerifyPassword(
+      password,
+      userId,
+      userType,
+    );
   }
 }
