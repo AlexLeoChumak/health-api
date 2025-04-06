@@ -28,6 +28,7 @@ import { EducationMedicalWorkerInfoEntityRepository } from 'src/repositories/edu
 import { IdentificationBelarusCitizenInfoEntityRepository } from 'src/repositories/identification-belarus-citizen-info-entity.repository';
 import { IdentificationForeignCitizenInfoEntityRepository } from 'src/repositories/identification-foreign-citizen-info-entity.repository';
 import { PlaceWorkInfoEntityRepository } from 'src/repositories/place-work-info-entity.repository';
+import { UserRepositoryService } from 'src/repositories/services/user-repository/user-repository.service';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { PlaceWorkInfoEntityRepository } from 'src/repositories/place-work-info-
     IdentificationBelarusCitizenInfoEntityRepository,
     IdentificationForeignCitizenInfoEntityRepository,
     PlaceWorkInfoEntityRepository,
+    UserRepositoryService,
     Logger,
   ],
   exports: [
@@ -75,6 +77,7 @@ import { PlaceWorkInfoEntityRepository } from 'src/repositories/place-work-info-
     IdentificationBelarusCitizenInfoEntityRepository,
     IdentificationForeignCitizenInfoEntityRepository,
     PlaceWorkInfoEntityRepository,
+    UserRepositoryService,
   ],
 })
 export class RepositoriesModule {}
