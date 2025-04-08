@@ -18,6 +18,9 @@ import {
   PatientResponseDto,
   DoctorResponseDto,
 } from 'src/modules/auth/dto/user-response.dto';
+import { UserRoleType } from 'src/common/models/user-role.type';
+import { SHARED_CONSTANT } from 'src/common/constants/shared.constant';
+import { UserRepositoryService } from 'src/repositories/services/user-repository/user-repository.service';
 
 @Injectable()
 export class LoginService {
@@ -26,13 +29,18 @@ export class LoginService {
     private readonly doctorEntityRepository: DoctorEntityRepository,
     private readonly accessRefreshTokenService: AccessRefreshTokenService,
     private readonly sensitiveFieldsUserService: SensitiveFieldsUserService,
+    private readonly userRepositoryService: UserRepositoryService,
   ) {}
 
-  loginPatient(patientData: LoginRequestDto): Observable<PatientResponseDto> {
+  public loginPatient(
+    patientData: LoginRequestDto,
+  ): Observable<PatientResponseDto> {
     return this.login(patientData, this.patientEntityRepository);
   }
 
-  loginDoctor(doctorData: LoginRequestDto): Observable<DoctorResponseDto> {
+  public loginDoctor(
+    doctorData: LoginRequestDto,
+  ): Observable<DoctorResponseDto> {
     return this.login(
       doctorData,
       this.doctorEntityRepository,
@@ -50,7 +58,10 @@ export class LoginService {
       repository,
     ).pipe(
       switchMap((foundUser: PatientEntity | DoctorEntity) => {
-        return this.comparePassword(loginDto, foundUser).pipe(
+        return this.comparePassword(
+          loginDto.password,
+          foundUser.mobilePhoneNumberPasswordInfo.hashedPassword,
+        ).pipe(
           switchMap(() => {
             const accessToken =
               this.accessRefreshTokenService.generateAccessToken(
@@ -95,7 +106,7 @@ export class LoginService {
   private findUserByMobilePhoneNumberIncludesRelations(
     loginDto: LoginRequestDto,
     repository: PatientEntityRepository | DoctorEntityRepository,
-  ) {
+  ): Observable<PatientEntity | DoctorEntity> {
     const relations = getEntityRelationsUtil(repository);
 
     return repository
@@ -113,16 +124,42 @@ export class LoginService {
       );
   }
 
-  private comparePassword(
-    loginDto: LoginRequestDto,
-    user: PatientEntity | DoctorEntity,
-  ) {
-    return from(
-      bcrypt.compare(
-        loginDto?.password,
-        user?.mobilePhoneNumberPasswordInfo?.hashedPassword,
-      ),
-    ).pipe(
+  public findUserByIdForVerifyPassword(
+    password: string,
+    userId: string,
+    userType: UserRoleType,
+  ): Observable<boolean> {
+    const repository = this.userRepositoryService.getUserRepository(userType);
+
+    return repository
+      .findOneById(userId, ['mobilePhoneNumberPasswordInfo'])
+      .pipe(
+        switchMap((user) => {
+          if (!user || !user.mobilePhoneNumberPasswordInfo.hashedPassword) {
+            return throwError(
+              () => new NotFoundException(SHARED_CONSTANT.USER_NOT_FOUND_ERROR),
+            );
+          }
+
+          return this.comparePassword(
+            password,
+            user.mobilePhoneNumberPasswordInfo.hashedPassword,
+          );
+        }),
+      );
+  }
+
+  public comparePassword(
+    password: string,
+    hashedPassword: string,
+  ): Observable<boolean> {
+    if (!password || !hashedPassword) {
+      throw new UnauthorizedException(
+        AUTH_NOTIFICATIONS.LOGIN_INVALID_PHONE_NUMBER_OR_PASSWORD_ERROR,
+      );
+    }
+
+    return from(bcrypt.compare(password, hashedPassword)).pipe(
       map((isMatch) => {
         if (!isMatch) {
           throw new UnauthorizedException(
