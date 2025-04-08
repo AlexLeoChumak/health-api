@@ -64,7 +64,6 @@ export class UserProfileController {
   }
 
   @Patch(':type/:id/upload-photo')
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('photo'))
   uploadUserPhoto(
     @Param('type') type: UserRoleType,
