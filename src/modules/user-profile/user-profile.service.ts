@@ -36,6 +36,7 @@ import {
 } from 'src/modules/auth/dto/user-response.dto';
 import { PatientEntity } from 'src/repositories/entities/patient.entity';
 import { DoctorEntity } from 'src/repositories/entities/doctor.entity';
+import { UserRepositoryService } from 'src/repositories/services/user-repository/user-repository.service';
 
 @Injectable()
 export class UserProfileService {
@@ -43,6 +44,7 @@ export class UserProfileService {
     private readonly configService: ConfigService,
     private readonly cloudStorageService: CloudStorageService,
     private readonly sensitiveFieldsUserService: SensitiveFieldsUserService,
+    private readonly userRepositoryService: UserRepositoryService,
     private readonly patientEntityRepository: PatientEntityRepository,
     private readonly doctorEntityRepository: DoctorEntityRepository,
     private readonly personalInfoRepository: PersonalInfoEntityRepository,
@@ -75,7 +77,7 @@ export class UserProfileService {
     userId: string,
     photo: Express.Multer.File,
   ): Observable<UpdateResult> {
-    const repository = this.getUserRepository(type);
+    const repository = this.userRepositoryService.getUserRepository(type);
 
     return repository.findOneById(userId, ['personalInfo']).pipe(
       switchMap((user) => {
@@ -109,7 +111,9 @@ export class UserProfileService {
   public updateInfoGroup(
     updateData: UpdateUserInfoGroupDto,
   ): Observable<string> {
-    const repository = this.getUserRepository(updateData.userRole);
+    const repository = this.userRepositoryService.getUserRepository(
+      updateData.userRole,
+    );
     const keyName = Object.keys(updateData.updateInfoGroup)[0];
     const isPersonalInfoGroup = keyName === 'personalInfo';
 
@@ -191,7 +195,9 @@ export class UserProfileService {
   public getUserInfo(
     userDecodedToken: DecodedAccessRefreshTokenInterface,
   ): Observable<PatientBaseResponseDto | DoctorBaseResponseDto> {
-    const repository = this.getUserRepository(userDecodedToken.role);
+    const repository = this.userRepositoryService.getUserRepository(
+      userDecodedToken.role,
+    );
     const relations = getEntityRelationsUtil(repository);
 
     return from(repository.findOneById(userDecodedToken.sub, relations)).pipe(
@@ -210,7 +216,9 @@ export class UserProfileService {
   }
 
   public updatePassword(updateData: UpdatePasswordDto): Observable<string> {
-    const repository = this.getUserRepository(updateData.userRole);
+    const repository = this.userRepositoryService.getUserRepository(
+      updateData.userRole,
+    );
 
     return repository
       .findOneById(updateData.userId, ['mobilePhoneNumberPasswordInfo'])
@@ -277,7 +285,7 @@ export class UserProfileService {
       throw new NotFoundException(SHARED_CONSTANT.REQUIRED_DATA_MISSING);
     }
 
-    const repository = this.getUserRepository(type);
+    const repository = this.userRepositoryService.getUserRepository(type);
     const relations = getEntityRelationsUtil(repository);
 
     return from(repository.findOneById(userId, relations)).pipe(
@@ -298,13 +306,5 @@ export class UserProfileService {
         return USER_PROFILE_CONSTANT.USER_DELETE_SUCCESS;
       }),
     );
-  }
-
-  private getUserRepository(
-    userRole: string,
-  ): PatientEntityRepository | DoctorEntityRepository {
-    return userRole === 'patient'
-      ? this.patientEntityRepository
-      : this.doctorEntityRepository;
   }
 }
